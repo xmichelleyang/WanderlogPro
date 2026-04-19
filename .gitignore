@@ -1,0 +1,42 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+*.egg
+dist/
+build/
+.eggs/
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Google OAuth tokens & credentials — NEVER commit these
+token.json
+credentials.json
+*.token.json
+
+# WanderlogPro outputs
+*.kml
+
+# Dry-run preview files
+wanderlogpro-preview-*.html
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
