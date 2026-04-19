@@ -72,18 +72,19 @@ def _timezone_note(dest_tz: str, reference_date: str) -> str:
         hours_str = f"{diff_hours:.1f} hours"
 
     return (
-        f'<div class="tz-note">'
-        f'🌍 Times shown in <strong>{html.escape(dest_tz)}</strong> (destination) '
-        f'&mdash; {hours_str} {direction} '
-        f'<strong>{html.escape(local_name)}</strong> (your timezone)'
-        f'</div>'
+        f'<span class="tz-badge">'
+        f'🌍 {html.escape(dest_tz)}'
+        f'</span>'
+        f'<span class="tz-offset">'
+        f'{hours_str} {direction} {html.escape(local_name)}'
+        f'</span>'
     )
 
 
 def _group_days_into_weeks(
     day_events: list[tuple[str, list[dict]]],
 ) -> list[list[tuple[str, list[dict]]]]:
-    """Group (date, events) pairs into Mon–Sun weeks."""
+    """Group (date, events) pairs into Sun–Sat weeks."""
     if not day_events:
         return []
 
@@ -91,8 +92,9 @@ def _group_days_into_weeks(
     min_date = min(all_dates)
     max_date = max(all_dates)
 
-    # Align to Monday
-    week_start = min_date - timedelta(days=min_date.weekday())
+    # Align to Sunday (weekday 6). Sun=0 offset, Mon=1, ... Sat=6
+    days_since_sun = (min_date.weekday() + 1) % 7
+    week_start = min_date - timedelta(days=days_since_sun)
     weeks: list[list[tuple[str, list[dict]]]] = []
     lookup = {d: evts for d, evts in day_events}
 
@@ -202,7 +204,7 @@ def generate_preview_html(
             all_durations.append(int((e - s).total_seconds() / 60))
     avg_duration = int(sum(all_durations) / len(all_durations)) if all_durations else 0
 
-    day_names = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
+    day_names = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
 
     # Build week sections
     week_sections = []
@@ -239,8 +241,6 @@ def generate_preview_html(
     first_date = day_events[0][0]
     last_date = day_events[-1][0]
 
-    initials = html.escape(trip_name[:2].upper()) if trip_name else "WL"
-
     return f"""<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -257,24 +257,19 @@ def generate_preview_html(
 <body>
 <div class="sticky-header" id="stickyHeader">
   <span class="sticky-title">{html.escape(trip_name)}</span>
-  <button class="dark-toggle" onclick="toggleDark()" title="Toggle dark mode" aria-label="Toggle dark mode">🌙</button>
 </div>
-<div class="hero-header">
-  <div class="bg-mesh"></div>
-  <div class="hero-content">
-    <div class="hero-initials">{initials}</div>
-    <h1>{html.escape(trip_name)}</h1>
-    <p class="subtitle">Dry-run preview &middot; {total_events} events across {total_days} days</p>
-    <p class="hint">Run without <code>--dry-run</code> to create these events in Google Calendar.</p>
-  </div>
-</div>
+<button class="dark-toggle" onclick="toggleDark()" title="Toggle dark mode" aria-label="Toggle dark mode">🌙</button>
+<div class="hero-spacer"></div>
 <div class="container">
-  <div class="stats-bar">
-    <div class="stat-card"><span class="stat-value" data-count="{total_events}">{total_events}</span> <span class="stat-label">events</span></div>
-    <div class="stat-card"><span class="stat-value" data-count="{total_days}">{total_days}</span> <span class="stat-label">days</span></div>
-    <div class="stat-card"><span class="stat-value">Avg {avg_duration} min</span><span class="stat-label">/event</span></div>
+  <div class="hero-card">
+    <div class="hero-icon">✈️</div>
+    <div class="hero-text">
+      <h1>{html.escape(trip_name)}</h1>
+      <p class="subtitle">Dry-run preview &middot; {total_events} events across {total_days} days</p>
+      {f'<p class="tz-line">{tz_html}</p>' if tz_html else ''}
+      <p class="hint">Run without <code>--dry-run</code> to create these events in Google Calendar.</p>
+    </div>
   </div>
-  {tz_html}
   {nav_html}
   {weeks_html}
   <div class="legend">
@@ -301,7 +296,7 @@ def _render_week(
     total_hours: int,
     day_names: list[str],
 ) -> str:
-    display = "grid" if week_idx == 0 else "none"
+    display = "block" if week_idx == 0 else "none"
 
     # Header row
     headers = ['<div class="time-gutter-header"></div>']
@@ -371,14 +366,22 @@ def _render_week(
 
             time_str = f"{_fmt_time(start_dt)}–{_fmt_time(end_dt)}"
 
-            # Tooltip data
+            # Tooltip data — strip the address line from description
+            # since it's already shown via the location field.
+            tooltip_desc = description
+            if location and tooltip_desc:
+                # description often starts with "📍 <address>\n..."
+                lines = tooltip_desc.split("\n")
+                filtered = [l for l in lines if location not in l]
+                tooltip_desc = "\n".join(filtered).strip()
+
             tooltip_data = {
                 "name": display_name,
                 "time": time_str,
                 "duration": f"{duration_min} min",
                 "location": location,
                 "explicit": is_explicit,
-                "description": description,
+                "description": tooltip_desc,
             }
             data_attr = html.escape(json.dumps(tooltip_data), quote=True)
 
@@ -540,6 +543,10 @@ body.dark .sticky-header {{
 
 /* ── Dark Toggle ───────────────────────────────────────────── */
 .dark-toggle {{
+  position: fixed;
+  top: 16px;
+  right: 20px;
+  z-index: 300;
   width: 40px; height: 40px;
   border-radius: 50%;
   border: 1px solid var(--border);
@@ -553,73 +560,79 @@ body.dark .sticky-header {{
 .dark-toggle:hover {{ transform: scale(1.1); box-shadow: var(--shadow-md); }}
 
 /* ── Hero Header — Cinematic ───────────────────────────────── */
-.hero-header {{
-  position: relative;
-  padding: 72px 24px 56px;
-  text-align: center;
-  overflow: hidden;
+/* ── Hero Spacer ───────────────────────────────────────────── */
+.hero-spacer {{ height: 32px; }}
+
+/* ── Hero Card ─────────────────────────────────────────────── */
+.hero-card {{
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  background: linear-gradient(135deg, #FEF3C7 0%, #FDE68A 25%, #FBBF24 50%, #F59E0B 75%, #F97316 100%);
+  border-radius: var(--radius-lg);
+  padding: 36px 40px;
+  margin-bottom: 24px;
+  box-shadow: 0 8px 32px rgba(245,158,11,0.2), 0 2px 8px rgba(249,115,22,0.1);
   animation: heroSlideDown 0.8s var(--ease) both;
+  overflow: hidden;
+  position: relative;
+}}
+body.dark .hero-card {{
+  background: linear-gradient(135deg, #78350F 0%, #92400E 30%, #B45309 60%, #D97706 100%);
+  box-shadow: 0 8px 32px rgba(217,119,6,0.25), 0 2px 8px rgba(0,0,0,0.3);
 }}
 @keyframes heroSlideDown {{
-  from {{ opacity: 0; transform: translateY(-30px); }}
+  from {{ opacity: 0; transform: translateY(-20px); }}
   to {{ opacity: 1; transform: translateY(0); }}
 }}
-.bg-mesh {{
-  position: absolute; inset: 0;
-  background:
-    radial-gradient(ellipse at 20% 50%, rgba(67,56,202,0.35) 0%, transparent 60%),
-    radial-gradient(ellipse at 80% 30%, rgba(245,158,11,0.25) 0%, transparent 55%),
-    radial-gradient(ellipse at 50% 80%, rgba(249,115,22,0.2) 0%, transparent 50%);
-  pointer-events: none;
+.hero-icon {{
+  font-size: 3rem;
+  flex-shrink: 0;
+  filter: drop-shadow(0 2px 8px rgba(0,0,0,0.15));
+  animation: planeBob 3s ease-in-out infinite;
 }}
-body.dark .bg-mesh {{
-  background:
-    radial-gradient(ellipse at 20% 50%, rgba(67,56,202,0.5) 0%, transparent 60%),
-    radial-gradient(ellipse at 80% 30%, rgba(245,158,11,0.2) 0%, transparent 55%),
-    radial-gradient(ellipse at 50% 80%, rgba(249,115,22,0.15) 0%, transparent 50%);
+@keyframes planeBob {{
+  0%, 100% {{ transform: translateY(0) rotate(-2deg); }}
+  50% {{ transform: translateY(-6px) rotate(2deg); }}
 }}
-.hero-content {{ position: relative; z-index: 1; }}
-.hero-initials {{
-  width: 56px; height: 56px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, var(--primary), var(--primary-light), var(--accent-hot));
-  color: #fff;
+@media (prefers-reduced-motion: reduce) {{
+  .hero-icon {{ animation: none; }}
+}}
+.hero-text {{ flex: 1; min-width: 0; }}
+.hero-card h1 {{
   font-family: var(--font-display);
+  font-size: 1.8rem;
   font-weight: 700;
-  font-size: 1.2rem;
-  display: inline-flex; align-items: center; justify-content: center;
-  margin-bottom: 16px;
-  box-shadow: 0 4px 20px rgba(67,56,202,0.3);
-}}
-.hero-header h1 {{
-  font-family: var(--font-display);
-  font-size: 2.2rem;
-  font-weight: 700;
-  color: var(--text);
+  color: #1C1917;
   letter-spacing: -0.02em;
+  margin-bottom: 6px;
+  line-height: 1.2;
+}}
+body.dark .hero-card h1 {{ color: #FEF3C7; }}
+.hero-card .subtitle {{
+  color: #44403C;
+  font-size: 0.95rem;
+  font-weight: 400;
   margin-bottom: 8px;
 }}
-.hero-header .subtitle {{
-  color: var(--text-muted);
-  font-size: 1rem;
-  font-weight: 400;
-  margin-bottom: 6px;
-}}
-.hero-header .hint {{
-  color: var(--text-muted);
+body.dark .hero-card .subtitle {{ color: #D6D3D1; }}
+.hero-card .hint {{
+  color: #57534E;
   font-size: 0.82rem;
-  opacity: 0.7;
+  opacity: 0.8;
+  margin-top: 8px;
 }}
-.hero-header .hint code {{
-  background: rgba(67,56,202,0.1);
+body.dark .hero-card .hint {{ color: #A8A29E; }}
+.hero-card .hint code {{
+  background: rgba(28,25,23,0.12);
   padding: 2px 7px;
   border-radius: 4px;
   font-size: 0.82rem;
-  color: var(--primary);
+  color: #1C1917;
 }}
-body.dark .hero-header .hint code {{
-  background: rgba(99,102,241,0.2);
-  color: var(--primary-light);
+body.dark .hero-card .hint code {{
+  background: rgba(254,243,199,0.15);
+  color: #FDE68A;
 }}
 
 /* ── Container ─────────────────────────────────────────────── */
@@ -669,36 +682,36 @@ body.dark .stat-card {{
 body.dark .stat-value {{ color: var(--primary-light); }}
 .stat-label {{ color: var(--text-muted); font-weight: 400; }}
 
-/* ── Timezone Note ─────────────────────────────────────────── */
-.tz-note {{
-  text-align: center;
-  background: #FEF3C7;
-  border: 1px solid rgba(245,158,11,0.3);
-  border-radius: var(--radius);
-  padding: 12px 20px;
-  margin: 0 auto 20px auto;
-  max-width: 700px;
-  font-size: 0.88rem;
-  color: var(--primary);
-  box-shadow: var(--shadow-sm);
-  animation: tzPulse 3s ease-in-out infinite;
+/* ── Timezone Note (inline in hero) ────────────────────────── */
+.tz-line {{
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  margin: 0;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 10px;
+  flex-wrap: wrap;
 }}
-body.dark .tz-note {{
-  background: #292524;
-  color: var(--primary-light);
-  border-color: rgba(245,158,11,0.15);
-}}
-@keyframes tzPulse {{
-  0%, 100% {{ box-shadow: var(--shadow-sm); }}
-  50% {{ box-shadow: 0 0 20px rgba(245,158,11,0.15); }}
-}}
-.tz-note strong {{
-  font-family: var(--font-display);
-  font-style: italic;
+.tz-badge {{
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 4px 14px;
   font-weight: 600;
+  font-size: 0.8rem;
   color: var(--text);
+  letter-spacing: 0.01em;
 }}
-body.dark .tz-note strong {{ color: var(--text); }}
+.tz-offset {{
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  font-weight: 400;
+  opacity: 0.85;
+}}
 
 /* ── Week Navigation — Pill ────────────────────────────────── */
 .week-nav {{
@@ -855,7 +868,7 @@ body.dark .hour-line.hour-alt {{
 .event {{
   position: absolute;
   left: 3px; right: 3px;
-  border-radius: var(--radius-lg);
+  border-radius: 6px;
   border-left: 4px solid;
   padding: 4px 8px;
   overflow: hidden;
@@ -1112,14 +1125,14 @@ def _js() -> str:
 function toggleDark() {
   document.body.classList.toggle('dark');
   var btn = document.querySelector('.dark-toggle');
-  btn.textContent = document.body.classList.contains('dark') ? '\u2600\uFE0F' : '\uD83C\uDF19';
+  btn.textContent = document.body.classList.contains('dark') ? '☀️' : '🌙';
 }
 
 /* ── Sticky Header on scroll ───────────────────────────────── */
 (function() {
   var header = document.getElementById('stickyHeader');
   if (!header) return;
-  var hero = document.querySelector('.hero-header');
+  var hero = document.querySelector('.hero-card');
   window.addEventListener('scroll', function() {
     var threshold = hero ? hero.offsetHeight - 60 : 100;
     if (window.scrollY > threshold) {
@@ -1152,9 +1165,9 @@ function showTooltip(e, el) {
   var parts = ['<div class="tt-name">' + escHtml(data.name) + '</div>'];
   parts.push('<div class="tt-time">' + escHtml(data.time) + ' (' + escHtml(data.duration) + ')</div>');
   if (data.location) {
-    parts.push('<div class="tt-location">\uD83D\uDCCD ' + escHtml(data.location) + '</div>');
+    parts.push('<div class="tt-location">📍 ' + escHtml(data.location) + '</div>');
   }
-  if (data.description) {
+  if (data.description && data.description !== data.location) {
     parts.push('<div class="tt-desc">' + escHtml(data.description) + '</div>');
   }
   if (data.explicit) {

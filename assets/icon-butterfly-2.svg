@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <!-- Draft 2: Angular/geometric butterfly — faceted crystal wings -->
+  <rect width="512" height="512" rx="96" fill="#1a1a1a"/>
+  <g transform="translate(256,255)">
+    <!-- Body -->
+    <line x1="0" y1="-70" x2="0" y2="90" stroke="#4ECDC4" stroke-width="10" stroke-linecap="round"/>
+    <!-- Antennae -->
+    <line x1="0" y1="-70" x2="-35" y2="-115" stroke="white" stroke-width="5" stroke-linecap="round"/>
+    <line x1="0" y1="-70" x2="35" y2="-115" stroke="white" stroke-width="5" stroke-linecap="round"/>
+    <circle cx="-35" cy="-115" r="5" fill="#4ECDC4"/>
+    <circle cx="35" cy="-115" r="5" fill="#4ECDC4"/>
+
+    <!-- Left upper wing — angular polygon -->
+    <polygon points="0,-55 -60,-100 -145,-60 -130,0 -60,10 0,-5"
+             fill="white" opacity="0.9"/>
+    <polygon points="-20,-40 -55,-70 -100,-45 -90,-10 -50,0 -20,-15"
+             fill="#4ECDC4" opacity="0.35"/>
+
+    <!-- Left lower wing -->
+    <polygon points="0,10 -55,5 -100,50 -80,100 -30,90 0,55"
+             fill="white" opacity="0.8"/>
+    <polygon points="-15,25 -50,30 -70,60 -55,80 -25,70 -15,45"
+             fill="#4ECDC4" opacity="0.3"/>
+
+    <!-- Right upper wing -->
+    <polygon points="0,-55 60,-100 145,-60 130,0 60,10 0,-5"
+             fill="white" opacity="0.9"/>
+    <polygon points="20,-40 55,-70 100,-45 90,-10 50,0 20,-15"
+             fill="#4ECDC4" opacity="0.35"/>
+
+    <!-- Right lower wing -->
+    <polygon points="0,10 55,5 100,50 80,100 30,90 0,55"
+             fill="white" opacity="0.8"/>
+    <polygon points="15,25 50,30 70,60 55,80 25,70 15,45"
+             fill="#4ECDC4" opacity="0.3"/>
+  </g>
+</svg>

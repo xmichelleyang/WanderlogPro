@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <!-- Draft 5: Abstract/modern — overlapping circles forming wing shapes -->
+  <rect width="512" height="512" rx="96" fill="#1a1a1a"/>
+  <g transform="translate(256,250)">
+    <!-- Left upper wing — overlapping circles -->
+    <circle cx="-75" cy="-50" r="70" fill="white" opacity="0.2"/>
+    <circle cx="-90" cy="-40" r="55" fill="white" opacity="0.35"/>
+    <circle cx="-70" cy="-35" r="45" fill="#4ECDC4" opacity="0.3"/>
+
+    <!-- Left lower wing -->
+    <circle cx="-55" cy="50" r="50" fill="white" opacity="0.2"/>
+    <circle cx="-60" cy="55" r="38" fill="white" opacity="0.3"/>
+    <circle cx="-50" cy="48" r="28" fill="#4ECDC4" opacity="0.25"/>
+
+    <!-- Right upper wing -->
+    <circle cx="75" cy="-50" r="70" fill="white" opacity="0.2"/>
+    <circle cx="90" cy="-40" r="55" fill="white" opacity="0.35"/>
+    <circle cx="70" cy="-35" r="45" fill="#4ECDC4" opacity="0.3"/>
+
+    <!-- Right lower wing -->
+    <circle cx="55" cy="50" r="50" fill="white" opacity="0.2"/>
+    <circle cx="60" cy="55" r="38" fill="white" opacity="0.3"/>
+    <circle cx="50" cy="48" r="28" fill="#4ECDC4" opacity="0.25"/>
+
+    <!-- Body — clean thick line -->
+    <line x1="0" y1="-85" x2="0" y2="95" stroke="white" stroke-width="12" stroke-linecap="round"/>
+
+    <!-- Antennae -->
+    <path d="M0,-85 Q-30,-115 -50,-130" fill="none" stroke="white" stroke-width="5" stroke-linecap="round"/>
+    <path d="M0,-85 Q30,-115 50,-130" fill="none" stroke="white" stroke-width="5" stroke-linecap="round"/>
+    <circle cx="-50" cy="-130" r="7" fill="#4ECDC4"/>
+    <circle cx="50" cy="-130" r="7" fill="#4ECDC4"/>
+
+    <!-- Center accent -->
+    <circle cx="0" cy="-20" r="10" fill="#4ECDC4"/>
+    <circle cx="0" cy="15" r="8" fill="#4ECDC4" opacity="0.7"/>
+    <circle cx="0" cy="45" r="6" fill="#4ECDC4" opacity="0.5"/>
+  </g>
+</svg>

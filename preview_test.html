@@ -1,0 +1,1123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Trip to Vietnam, Guangdong, and more — WanderlogPro Preview</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,600;0,9..144,700;1,9..144,400&family=Geist:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+
+/* ── Reset & Custom Properties ─────────────────────────────── */
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+:root {
+  --primary: #4338CA;
+  --primary-light: #6366F1;
+  --accent-warm: #F59E0B;
+  --accent-hot: #F97316;
+  --surface: #FFFBF5;
+  --surface-card: #FFFFFF;
+  --surface-card-glass: rgba(255,251,245,0.72);
+  --text: #1C1917;
+  --text-muted: #78716C;
+  --border: rgba(120,113,108,0.18);
+  --shadow-sm: 0 1px 3px rgba(28,25,23,0.06);
+  --shadow-md: 0 4px 16px rgba(28,25,23,0.08);
+  --shadow-lg: 0 12px 40px rgba(28,25,23,0.12);
+  --radius: 0.75rem;
+  --radius-lg: 1.25rem;
+  --spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --ease: cubic-bezier(0.4, 0, 0.2, 1);
+  --transition: 0.3s var(--ease);
+  --font-display: 'Fraunces', Georgia, serif;
+  --font-body: 'Geist', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  color-scheme: light;
+}
+
+/* ── Dark Mode ─────────────────────────────────────────────── */
+body.dark {
+  --surface: #0F172A;
+  --surface-card: #1E293B;
+  --surface-card-glass: rgba(15,23,42,0.78);
+  --text: #FEF3C7;
+  --text-muted: #A8A29E;
+  --border: rgba(254,243,199,0.1);
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.3);
+  --shadow-md: 0 4px 16px rgba(0,0,0,0.35);
+  --shadow-lg: 0 12px 40px rgba(0,0,0,0.45);
+  color-scheme: dark;
+}
+
+body {
+  font-family: var(--font-body);
+  background: var(--surface);
+  color: var(--text);
+  transition: background var(--transition), color var(--transition);
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── Micro-label style ─────────────────────────────────────── */
+.micro-label {
+  text-transform: uppercase;
+  letter-spacing: 0.22em;
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+/* ── Sticky Glass Header ───────────────────────────────────── */
+.sticky-header {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 24px;
+  background: rgba(255,251,245,0.7);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border-bottom: 1px solid transparent;
+  transition: border-color 0.3s var(--ease), box-shadow 0.3s var(--ease);
+  opacity: 0;
+  transform: translateY(-100%);
+  transition: opacity 0.3s var(--ease), transform 0.3s var(--ease), border-color 0.3s var(--ease);
+}
+body.dark .sticky-header {
+  background: rgba(15,23,42,0.7);
+}
+.sticky-header.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+.sticky-header.scrolled {
+  border-bottom-color: var(--border);
+  box-shadow: var(--shadow-sm);
+}
+.sticky-title {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 1rem;
+  color: var(--text);
+}
+
+/* ── Dark Toggle ───────────────────────────────────────────── */
+.dark-toggle {
+  width: 40px; height: 40px;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  background: var(--surface-card);
+  cursor: pointer;
+  font-size: 1.1rem;
+  display: flex; align-items: center; justify-content: center;
+  transition: transform 0.3s var(--spring), box-shadow var(--transition);
+  box-shadow: var(--shadow-sm);
+}
+.dark-toggle:hover { transform: scale(1.1); box-shadow: var(--shadow-md); }
+
+/* ── Hero Header — Cinematic ───────────────────────────────── */
+/* ── Hero Spacer ───────────────────────────────────────────── */
+.hero-spacer { height: 32px; }
+
+/* ── Hero Card ─────────────────────────────────────────────── */
+.hero-card {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  background: linear-gradient(135deg, #FEF3C7 0%, #FDE68A 25%, #FBBF24 50%, #F59E0B 75%, #F97316 100%);
+  border-radius: var(--radius-lg);
+  padding: 36px 40px;
+  margin-bottom: 24px;
+  box-shadow: 0 8px 32px rgba(245,158,11,0.2), 0 2px 8px rgba(249,115,22,0.1);
+  animation: heroSlideDown 0.8s var(--ease) both;
+  overflow: hidden;
+  position: relative;
+}
+body.dark .hero-card {
+  background: linear-gradient(135deg, #78350F 0%, #92400E 30%, #B45309 60%, #D97706 100%);
+  box-shadow: 0 8px 32px rgba(217,119,6,0.25), 0 2px 8px rgba(0,0,0,0.3);
+}
+@keyframes heroSlideDown {
+  from { opacity: 0; transform: translateY(-20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.hero-icon {
+  font-size: 3rem;
+  flex-shrink: 0;
+  filter: drop-shadow(0 2px 8px rgba(0,0,0,0.15));
+  animation: planeBob 3s ease-in-out infinite;
+}
+@keyframes planeBob {
+  0%, 100% { transform: translateY(0) rotate(-2deg); }
+  50% { transform: translateY(-6px) rotate(2deg); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hero-icon { animation: none; }
+}
+.hero-text { flex: 1; min-width: 0; }
+.hero-card h1 {
+  font-family: var(--font-display);
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: #1C1917;
+  letter-spacing: -0.02em;
+  margin-bottom: 6px;
+  line-height: 1.2;
+}
+body.dark .hero-card h1 { color: #FEF3C7; }
+.hero-card .subtitle {
+  color: #44403C;
+  font-size: 0.95rem;
+  font-weight: 400;
+  margin-bottom: 4px;
+}
+body.dark .hero-card .subtitle { color: #D6D3D1; }
+.hero-card .hint {
+  color: #57534E;
+  font-size: 0.82rem;
+  opacity: 0.8;
+}
+body.dark .hero-card .hint { color: #A8A29E; }
+.hero-card .hint code {
+  background: rgba(28,25,23,0.12);
+  padding: 2px 7px;
+  border-radius: 4px;
+  font-size: 0.82rem;
+  color: #1C1917;
+}
+body.dark .hero-card .hint code {
+  background: rgba(254,243,199,0.15);
+  color: #FDE68A;
+}
+
+/* ── Container ─────────────────────────────────────────────── */
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 24px 40px;
+  animation: slideUp 0.7s 0.2s var(--ease) both;
+}
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(40px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Stats Bar — Solid warm cards ──────────────────────────── */
+.stats-bar {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin: -24px auto 24px;
+  position: relative;
+  z-index: 10;
+  animation: fadeIn 0.6s 0.5s both;
+}
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+.stat-card {
+  background: #FEF3C7;
+  border: 1px solid rgba(245,158,11,0.25);
+  border-radius: var(--radius);
+  padding: 12px 20px;
+  display: flex; align-items: center; gap: 6px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  box-shadow: var(--shadow-md);
+  transition: transform var(--transition), box-shadow var(--transition);
+}
+body.dark .stat-card {
+  background: #292524;
+  border-color: rgba(245,158,11,0.15);
+}
+.stat-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-lg); }
+.stat-value { font-weight: 700; color: var(--primary); font-family: var(--font-display); }
+body.dark .stat-value { color: var(--primary-light); }
+.stat-label { color: var(--text-muted); font-weight: 400; }
+
+/* ── Timezone Note ─────────────────────────────────────────── */
+.tz-note {
+  text-align: center;
+  background: #FEF3C7;
+  border: 1px solid rgba(245,158,11,0.3);
+  border-radius: var(--radius);
+  padding: 12px 20px;
+  margin: 0 auto 20px auto;
+  max-width: 700px;
+  font-size: 0.88rem;
+  color: var(--primary);
+  box-shadow: var(--shadow-sm);
+  animation: tzPulse 3s ease-in-out infinite;
+}
+body.dark .tz-note {
+  background: #292524;
+  color: var(--primary-light);
+  border-color: rgba(245,158,11,0.15);
+}
+@keyframes tzPulse {
+  0%, 100% { box-shadow: var(--shadow-sm); }
+  50% { box-shadow: 0 0 20px rgba(245,158,11,0.15); }
+}
+.tz-note strong {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-weight: 600;
+  color: var(--text);
+}
+body.dark .tz-note strong { color: var(--text); }
+
+/* ── Week Navigation — Pill ────────────────────────────────── */
+.week-nav {
+  display: flex;
+  gap: 4px;
+  justify-content: center;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+  background: var(--surface-card);
+  border: 1px solid var(--border);
+  border-radius: 28px;
+  padding: 4px;
+  display: inline-flex;
+  margin-left: auto; margin-right: auto;
+  display: flex;
+}
+.week-tab {
+  padding: 8px 18px;
+  border: none;
+  border-radius: 24px;
+  background: transparent;
+  cursor: pointer;
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  transition: all 0.35s var(--spring);
+}
+.week-tab:hover {
+  color: var(--primary);
+  background: rgba(67,56,202,0.06);
+}
+.week-tab.active {
+  background: linear-gradient(135deg, #4338CA, #6366F1, #F97316);
+  color: #fff;
+  box-shadow: 0 4px 16px rgba(67,56,202,0.3);
+}
+
+/* ── Week Container ────────────────────────────────────────── */
+.week-container {
+  background: var(--surface-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  overflow: hidden;
+  animation: weekFade 0.45s var(--ease) both;
+}
+@keyframes weekFade {
+  from { opacity: 0; transform: scale(0.98); }
+  to { opacity: 1; transform: scale(1); }
+}
+.week-grid { display: flex; flex-direction: column; }
+
+/* ── Header Row ────────────────────────────────────────────── */
+.header-row {
+  display: grid;
+  grid-template-columns: 60px repeat(7, 1fr);
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  background: var(--surface-card);
+  z-index: 10;
+}
+.time-gutter-header { padding: 12px 4px; }
+.day-header {
+  text-align: center;
+  padding: 10px 4px;
+  border-left: 1px solid var(--border);
+  transition: background var(--transition);
+}
+.day-header.has-events {
+  background: rgba(67,56,202,0.05);
+}
+body.dark .day-header.has-events {
+  background: rgba(99,102,241,0.1);
+}
+.day-name {
+  display: block;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.22em;
+}
+.day-date {
+  display: block;
+  font-family: var(--font-display);
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text);
+  margin-top: 2px;
+}
+
+/* ── Body Row / Grid ───────────────────────────────────────── */
+.body-row {
+  display: grid;
+  grid-template-columns: 60px repeat(7, 1fr);
+  height: 750px;
+  position: relative;
+}
+.time-gutter {
+  position: relative;
+  border-right: 1px solid var(--border);
+}
+.time-label {
+  position: absolute;
+  right: 8px;
+  font-size: 0.68rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  transform: translateY(-50%);
+  white-space: nowrap;
+  padding-left: 4px;
+  border-left: 2px solid transparent;
+}
+.time-label.alt { border-left-color: var(--accent-warm); opacity: 0.7; }
+
+.day-column {
+  position: relative;
+  border-left: 1px solid var(--border);
+}
+.hour-line {
+  position: absolute;
+  left: 0; right: 0;
+  border-top: 1px solid var(--border);
+}
+.hour-line.hour-alt {
+  background: rgba(245,158,11,0.03);
+}
+body.dark .hour-line.hour-alt {
+  background: rgba(245,158,11,0.02);
+}
+
+/* ── Current Time Indicator ────────────────────────────────── */
+.now-line {
+  position: absolute;
+  left: 0; right: 0;
+  height: 2px;
+  background: var(--accent-hot);
+  z-index: 8;
+  pointer-events: none;
+}
+.now-line::before {
+  content: '';
+  position: absolute;
+  left: -4px;
+  top: -3px;
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--accent-hot);
+}
+
+/* ── Events ────────────────────────────────────────────────── */
+.event {
+  position: absolute;
+  left: 3px; right: 3px;
+  border-radius: var(--radius-lg);
+  border-left: 4px solid;
+  padding: 4px 8px;
+  overflow: hidden;
+  cursor: pointer;
+  font-size: 0.78rem;
+  line-height: 1.3;
+  z-index: 2;
+  background: var(--surface-card);
+  transition: box-shadow 0.3s var(--ease), transform 0.3s var(--spring);
+  animation: fadeSlideIn 0.5s var(--spring) both;
+}
+@keyframes fadeSlideIn {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.event:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 8px 24px rgba(245,158,11,0.2);
+  z-index: 5;
+}
+body.dark .event {
+  box-shadow: inset 0 0 0 1px rgba(254,243,199,0.08);
+}
+body.dark .event:hover {
+  box-shadow: 0 0 20px rgba(99,102,241,0.25), inset 0 0 0 1px rgba(254,243,199,0.15);
+}
+
+.explicit-event {
+  border-left-width: 4px;
+  border-left-color: var(--accent-hot) !important;
+}
+
+.explicit-badge {
+  display: inline-flex;
+  align-items: center;
+  margin-right: 4px;
+  vertical-align: middle;
+}
+.pulse-dot {
+  display: inline-block;
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: var(--accent-hot);
+  animation: pulseDot 1.5s ease-in-out infinite;
+}
+@keyframes pulseDot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(1.4); }
+}
+
+.event-name {
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--text);
+  font-family: var(--font-body);
+}
+.event-name.compact { font-size: 0.72rem; }
+.event-time {
+  font-size: 0.66rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-top: 1px;
+}
+
+/* ── Travel Gaps — Animated Polyline ───────────────────────── */
+.travel-gap {
+  position: absolute;
+  left: 10px; right: 10px;
+  margin-left: 12px;
+  display: flex;
+  align-items: center;
+  z-index: 1;
+  overflow: hidden;
+}
+.travel-dots {
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 2px;
+  background: repeating-linear-gradient(
+    to bottom,
+    var(--text-muted) 0px,
+    var(--text-muted) 3px,
+    transparent 3px,
+    transparent 7px
+  );
+  animation: dotsFlow 1.5s linear infinite;
+}
+@keyframes dotsFlow {
+  from { background-position: 0 0; }
+  to { background-position: 0 14px; }
+}
+.travel-label {
+  font-size: 0.64rem;
+  color: var(--text-muted);
+  margin-left: 10px;
+  white-space: nowrap;
+  font-weight: 500;
+}
+
+/* ── Legend ─────────────────────────────────────────────────── */
+.legend {
+  display: flex;
+  gap: 20px;
+  justify-content: center;
+  margin-top: 18px;
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  flex-wrap: wrap;
+}
+.legend-item { display: flex; align-items: center; gap: 6px; }
+.legend-dot {
+  width: 12px; height: 12px;
+  border-radius: 4px;
+  display: inline-block;
+}
+.legend-dot.explicit {
+  background: #FED7AA;
+  border-left: 3px solid var(--accent-hot);
+}
+body.dark .legend-dot.explicit { background: rgba(249,115,22,0.2); }
+.legend-dot.scheduled {
+  background: hsl(35, 55%, 82%);
+  border-left: 3px solid hsl(35, 50%, 50%);
+}
+.legend-dot.travel {
+  background: transparent;
+  border-left: 2px dashed var(--text-muted);
+  width: 8px;
+}
+
+/* ── Tooltip — Warm glass ──────────────────────────────────── */
+.tooltip {
+  display: none;
+  position: fixed;
+  background: var(--surface-card-glass);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 14px 16px;
+  box-shadow: var(--shadow-lg);
+  z-index: 100;
+  max-width: 320px;
+  font-size: 0.85rem;
+  line-height: 1.5;
+  pointer-events: none;
+  opacity: 0;
+  transform: scale(0.92);
+  transition: opacity 0.2s, transform 0.2s var(--spring);
+}
+.tooltip.visible {
+  opacity: 1;
+  transform: scale(1);
+}
+.tooltip .tt-name {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1rem;
+  margin-bottom: 6px;
+  color: var(--text);
+}
+.tooltip .tt-time {
+  color: var(--text-muted);
+  font-size: 0.82rem;
+}
+.tooltip .tt-location {
+  color: var(--primary);
+  margin-top: 5px;
+  font-size: 0.82rem;
+}
+body.dark .tooltip .tt-location { color: var(--primary-light); }
+.tooltip .tt-desc {
+  color: var(--text-muted);
+  margin-top: 4px;
+  font-size: 0.8rem;
+  font-style: italic;
+}
+.tooltip .tt-explicit {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(249,115,22,0.1);
+  color: var(--accent-hot);
+  font-weight: 600;
+  font-size: 0.75rem;
+  margin-top: 6px;
+  padding: 3px 8px;
+  border-radius: 4px;
+}
+
+/* ── Footer ────────────────────────────────────────────────── */
+.footer {
+  text-align: center;
+  padding: 28px 16px 20px;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+.footer-brand {
+  font-weight: 700;
+  background: linear-gradient(135deg, #4338CA, #6366F1, #F97316);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ── Empty State ───────────────────────────────────────────── */
+.empty-wrap {
+  text-align: center;
+  padding: 80px 24px;
+  animation: fadeIn 0.8s both;
+}
+.empty-emoji {
+  font-size: 4.5rem;
+  display: block;
+  margin-bottom: 20px;
+  animation: emFloat 3s ease-in-out infinite;
+}
+@keyframes emFloat {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-12px); }
+}
+.empty-title {
+  font-family: var(--font-display);
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 8px;
+}
+.empty-sub {
+  color: var(--text-muted);
+  font-size: 0.95rem;
+  max-width: 400px;
+  margin: 0 auto;
+}
+
+/* ── Reduced Motion ────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+</style>
+</head>
+<body>
+<div class="sticky-header" id="stickyHeader">
+  <span class="sticky-title">Trip to Vietnam, Guangdong, and more</span>
+  <button class="dark-toggle" onclick="toggleDark()" title="Toggle dark mode" aria-label="Toggle dark mode">🌙</button>
+</div>
+<div class="hero-spacer"></div>
+<div class="container">
+  <div class="hero-card">
+    <div class="hero-icon">✈️</div>
+    <div class="hero-text">
+      <h1>Trip to Vietnam, Guangdong, and more</h1>
+      <p class="subtitle">Dry-run preview &middot; 8 events across 8 days</p>
+      <p class="hint">Run without <code>--dry-run</code> to create these events in Google Calendar.</p>
+    </div>
+  </div>
+  <div class="stats-bar">
+    <div class="stat-card"><span class="stat-value" data-count="8">8</span> <span class="stat-label">events</span></div>
+    <div class="stat-card"><span class="stat-value" data-count="8">8</span> <span class="stat-label">days</span></div>
+    <div class="stat-card"><span class="stat-value">Avg 288 min</span><span class="stat-label">/event</span></div>
+  </div>
+  <div class="tz-note">🌍 Times shown in <strong>Asia/Ho_Chi_Minh</strong> (destination) &mdash; 14 hours ahead of <strong>Pacific Daylight Time</strong> (your timezone)</div>
+  <div class="week-nav"><button class="week-tab active" onclick="showWeek(0)">Jan 13 – Jan 19</button><button class="week-tab " onclick="showWeek(1)">Jan 20 – Jan 26</button></div>
+  <div class="week-container" id="week-0" style="display:block">
+  <div class="week-grid">
+    <div class="header-row"><div class="time-gutter-header"></div>
+<div class="day-header has-events"><span class="day-name">Mon</span><span class="day-date">Jan 13</span></div>
+<div class="day-header has-events"><span class="day-name">Tue</span><span class="day-date">Jan 14</span></div>
+<div class="day-header has-events"><span class="day-name">Wed</span><span class="day-date">Jan 15</span></div>
+<div class="day-header has-events"><span class="day-name">Thu</span><span class="day-date">Jan 16</span></div>
+<div class="day-header has-events"><span class="day-name">Fri</span><span class="day-date">Jan 17</span></div>
+<div class="day-header has-events"><span class="day-name">Sat</span><span class="day-date">Jan 18</span></div>
+<div class="day-header has-events"><span class="day-name">Sun</span><span class="day-date">Jan 19</span></div></div>
+    <div class="body-row">
+      <div class="time-gutter">
+<div class="time-label" style="top:0.0%">5 AM</div>
+<div class="time-label alt" style="top:6.666666666666667%">6 AM</div>
+<div class="time-label" style="top:13.333333333333334%">7 AM</div>
+<div class="time-label alt" style="top:20.0%">8 AM</div>
+<div class="time-label" style="top:26.666666666666668%">9 AM</div>
+<div class="time-label alt" style="top:33.33333333333333%">10 AM</div>
+<div class="time-label" style="top:40.0%">11 AM</div>
+<div class="time-label alt" style="top:46.666666666666664%">12 PM</div>
+<div class="time-label" style="top:53.333333333333336%">1 PM</div>
+<div class="time-label alt" style="top:60.0%">2 PM</div>
+<div class="time-label" style="top:66.66666666666666%">3 PM</div>
+<div class="time-label alt" style="top:73.33333333333333%">4 PM</div>
+<div class="time-label" style="top:80.0%">5 PM</div>
+<div class="time-label alt" style="top:86.66666666666667%">6 PM</div>
+<div class="time-label" style="top:93.33333333333333%">7 PM</div>
+</div>
+      <div class="day-column" data-date="2025-01-13">
+<div class="hour-line" style="top:0.0%;height:6.666666666666667%"></div>
+<div class="hour-line hour-alt" style="top:6.666666666666667%;height:6.666666666666667%"></div>
+<div class="hour-line" style="top:13.333333333333334%;height:6.666666666666667%"></div>
+<div class="hour-line hour-alt" style="top:20.0%;height:6.666666666666667%"></div>
+<div class="hour-line" style="top:26.666666666666668%;height:6.666666666666667%"></div>
+<div class="hour-line hour-alt" style="top:33.33333333333333%;height:6.666666666666667%"></div>
+<div class="hour-line" style="top:40.0%;height:6.666666666666667%"></div>
+<div class="hour-line hour-alt" style="top:46.666666666666664%;height:6.666666666666667%"></div>
+<div class="hour-line" style="top:53.333333333333336%;height:6.666666666666667%"></div>
+<div class="hour-line hour-alt" style="top:60.0%;height:6.666666666666667%"></div>
+<div class="hour-line" style="top:66.66666666666666%;height:6.666666666666667%"></div>
+<div class="hour-line hour-alt" style="top:73.33333333333333%;height:6.666666666666667%"></div>
+<div class="hour-line" style="top:80.0%;height:6.666666666666667%"></div>
+<div class="hour-line hour-alt" style="top:86.66666666666667%;height:6.666666666666667%"></div>
+<div class="hour-line" style="top:93.33333333333333%;height:6.666666666666667%"></div>
+<div class="event " style="top:86.66666666666667%;height:6.666666666666667%;background:hsl(27, 55%, 82%);border-color:hsl(27, 50%, 50%);animation-delay:0.0s;" data-tooltip="{&quot;name&quot;: &quot;Arrive Hanoi&quot;, &quot;time&quot;: &quot;6:00 PM\u20137:00 PM&quot;, &quot;duration&quot;: &quot;60 min&quot;, &quot;location&quot;: &quot;Noi Bai Airport&quot;, &quot;explicit&quot;: false, &quot;description&quot;: &quot;&quot;}" onmouseenter="showTooltip(event, this)" onmouseleave="hideTooltip()"><div class="event-name">Arrive Hanoi</div><div class="event-time">6:00 PM–7:00 PM</div></div>
+</div>
+<div class="day-column" data-date="2025-01-14">
+<div class="hour-line" style="top:0.0%;height:6.666666666666667%"></div>
+<div class="hour-line hour-alt" style="top:6.666666666666667%;height:6.666666666666667%"></div>
+<div class="hour-line" style="top:13.333333333333334%;height:6.666666666666667%"></div>
+<div class="hour-line hour-alt" style="top:20.0%;height:6.666666666666667%"></div>
+<div class="hour-line" style="top:26.666666666666668%;height:6.666666666666667%"></div>
+<div class="hour-line hour-alt" style="top:33.33333333333333%;height:6.666666666666667%"></div>
+<div class="hour-line" style="top:40.0%;height:6.666666666666667%"></div>
+<div class="hour-line hour-alt" style="top:46.666666666666664%;height:6.666666666666667%"></div>
+<div class="hour-line" style="top:53.333333333333336%;height:6.666666666666667%"></div>
+<div class="hour-line hour-alt" style="top:60.0%;height:6.666666666666667%"></div>
+<div class="hour-line" style="top:66.66666666666666%;height:6.666666666666667%"></div>
+<div class="hour-line hour-alt" style="top:73.33333333333333%;height:6.666666666666667%"></div>
+<div class="hour-line" style="top:80.0%;height:6.666666666666667%"></div>
+<div class="hour-line hour-alt" style="top:86.66666666666667%;height:6.666666666666667%"></div>
+<div class="hour-line" style="top:93.33333333333333%;height:6.666666666666667%"></div>
+<div class="event " style="top:26.666666666666668%;height:20.0%;background:hsl(48, 55%, 82%);border-color:hsl(48, 50%, 50%);animation-delay:0.04s;" data-tooltip="{&quot;name&quot;: &quot;Old Quarter Walk&quot;, &quot;time&quot;: &quot;9:00 AM\u201312:00 PM&quot;, &quot;duration&quot;: &quot;180 min&quot;, &quot;location&quot;: &quot;Hanoi Old Quarter&quot;, &quot;explicit&quot;: false, &quot;description&quot;: &quot;&quot;}" onmouseenter="showTooltip(event, this)" onmouseleave="hideTooltip()"><div class="event-name">Old Quarter Walk</div><div class="event-time">9:00 AM–12:00 PM</div></div>
+</div>
+<div class="day-column" data-date="2025-01-15">
+<div class="hour-line" style="top:0.0%;height:6.666666666666667%"></div>
+<div class="hour-line hour-alt" style="top:6.666666666666667%;height:6.666666666666667%"></div>
+<div class="hour-line" style="top:13.333333333333334%;height:6.666666666666667%"></div>
+<div class="hour-line hour-alt" style="top:20.0%;height:6.666666666666667%"></div>
+<div class="hour-line" style="top:26.666666666666668%;height:6.666666666666667%"></div>
+<div class="hour-line hour-alt" style="top:33.33333333333333%;height:6.666666666666667%"></div>
+<div class="hour-line" style="top:40.0%;height:6.666666666666667%"></div>
+<div class="hour-line hour-alt" style="top:46.666666666666664%;height:6.666666666666667%"></div>
+<div class="hour-line" style="top:53.333333333333336%;height:6.666666666666667%"></div>
+<div class="hour-line hour-alt" style="top:60.0%;height:6.666666666666667%"></div>
+<div class="hour-line" style="top:66.66666666666666%;height:6.666666666666667%"></div>
+<div class="hour-line hour-alt" style="top:73.33333333333333%;height:6.666666666666667%"></div>
+<div class="hour-line" style="top:80.0%;height:6.666666666666667%"></div>
+<div class="hour-line hour-alt" style="top:86.66666666666667%;height:6.666666666666667%"></div>
+<div class="hour-line" style="top:93.33333333333333%;height:6.666666666666667%"></div>
+<div class="event " style="top:20.0%;height:10.0%;background:hsl(44, 55%, 82%);border-color:hsl(44, 50%, 50%);animation-delay:0.08s;" data-tooltip="{&quot;name&quot;: &quot;Pho 10&quot;, &quot;time&quot;: &quot;8:00 AM\u20139:30 AM&quot;, &quot;duration&quot;: &quot;90 min&quot;, &quot;location&quot;: &quot;Ly Quoc Su&quot;, &quot;explicit&quot;: false, &quot;description&quot;: &quot;&quot;}" onmouseenter="showTooltip(event, this)" onmouseleave="hideTooltip()"><div class="event-name">Pho 10</div><div class="event-time">8:00 AM–9:30 AM</div></div>
+</div>
+<div class="day-column" data-date="2025-01-16">
+<div class="hour-line" style="top:0.0%;height:6.666666666666667%"></div>
+<div class="hour-line hour-alt" style="top:6.666666666666667%;height:6.666666666666667%"></div>
+<div class="hour-line" style="top:13.333333333333334%;height:6.666666666666667%"></div>
+<div class="hour-line hour-alt" style="top:20.0%;height:6.666666666666667%"></div>
+<div class="hour-line" style="top:26.666666666666668%;height:6.666666666666667%"></div>
+<div class="hour-line hour-alt" style="top:33.33333333333333%;height:6.666666666666667%"></div>
+<div class="hour-line" style="top:40.0%;height:6.666666666666667%"></div>
+<div class="hour-line hour-alt" style="top:46.666666666666664%;height:6.666666666666667%"></div>
+<div class="hour-line" style="top:53.333333333333336%;height:6.666666666666667%"></div>
+<div class="hour-line hour-alt" style="top:60.0%;height:6.666666666666667%"></div>
+<div class="hour-line" style="top:66.66666666666666%;height:6.666666666666667%"></div>
+<div class="hour-line hour-alt" style="top:73.33333333333333%;height:6.666666666666667%"></div>
+<div class="hour-line" style="top:80.0%;height:6.666666666666667%"></div>
+<div class="hour-line hour-alt" style="top:86.66666666666667%;height:6.666666666666667%"></div>
+<div class="hour-line" style="top:93.33333333333333%;height:6.666666666666667%"></div>
+<div class="event " style="top:13.333333333333334%;height:66.66666666666666%;background:hsl(29, 55%, 82%);border-color:hsl(29, 50%, 50%);animation-delay:0.12s;" data-tooltip="{&quot;name&quot;: &quot;Halong Bay&quot;, &quot;time&quot;: &quot;7:00 AM\u20135:00 PM&quot;, &quot;duration&quot;: &quot;600 min&quot;, &quot;location&quot;: &quot;Halong Bay&quot;, &quot;explicit&quot;: false, &quot;description&quot;: &quot;&quot;}" onmouseenter="showTooltip(event, this)" onmouseleave="hideTooltip()"><div class="event-name">Halong Bay</div><div class="event-time">7:00 AM–5:00 PM</div></div>
+</div>
+<div class="day-column" data-date="2025-01-17">
+<div class="hour-line" style="top:0.0%;height:6.666666666666667%"></div>
+<div class="hour-line hour-alt" style="top:6.666666666666667%;height:6.666666666666667%"></div>
+<div class="hour-line" style="top:13.333333333333334%;height:6.666666666666667%"></div>
+<div class="hour-line hour-alt" style="top:20.0%;height:6.666666666666667%"></div>
+<div class="hour-line" style="top:26.666666666666668%;height:6.666666666666667%"></div>
+<div class="hour-line hour-alt" style="top:33.33333333333333%;height:6.666666666666667%"></div>
+<div class="hour-line" style="top:40.0%;height:6.666666666666667%"></div>
+<div class="hour-line hour-alt" style="top:46.666666666666664%;height:6.666666666666667%"></div>
+<div class="hour-line" style="top:53.333333333333336%;height:6.666666666666667%"></div>
+<div class="hour-line hour-alt" style="top:60.0%;height:6.666666666666667%"></div>
+<div class="hour-line" style="top:66.66666666666666%;height:6.666666666666667%"></div>
+<div class="hour-line hour-alt" style="top:73.33333333333333%;height:6.666666666666667%"></div>
+<div class="hour-line" style="top:80.0%;height:6.666666666666667%"></div>
+<div class="hour-line hour-alt" style="top:86.66666666666667%;height:6.666666666666667%"></div>
+<div class="hour-line" style="top:93.33333333333333%;height:6.666666666666667%"></div>
+<div class="event " style="top:6.666666666666667%;height:80.0%;background:hsl(48, 55%, 82%);border-color:hsl(48, 50%, 50%);animation-delay:0.16s;" data-tooltip="{&quot;name&quot;: &quot;Train to Hue&quot;, &quot;time&quot;: &quot;6:00 AM\u20136:00 PM&quot;, &quot;duration&quot;: &quot;720 min&quot;, &quot;location&quot;: &quot;Hanoi Station&quot;, &quot;explicit&quot;: false, &quot;description&quot;: &quot;&quot;}" onmouseenter="showTooltip(event, this)" onmouseleave="hideTooltip()"><div class="event-name">Train to Hue</div><div class="event-time">6:00 AM–6:00 PM</div></div>
+</div>
+<div class="day-column" data-date="2025-01-18">
+<div class="hour-line" style="top:0.0%;height:6.666666666666667%"></div>
+<div class="hour-line hour-alt" style="top:6.666666666666667%;height:6.666666666666667%"></div>
+<div class="hour-line" style="top:13.333333333333334%;height:6.666666666666667%"></div>
+<div class="hour-line hour-alt" style="top:20.0%;height:6.666666666666667%"></div>
+<div class="hour-line" style="top:26.666666666666668%;height:6.666666666666667%"></div>
+<div class="hour-line hour-alt" style="top:33.33333333333333%;height:6.666666666666667%"></div>
+<div class="hour-line" style="top:40.0%;height:6.666666666666667%"></div>
+<div class="hour-line hour-alt" style="top:46.666666666666664%;height:6.666666666666667%"></div>
+<div class="hour-line" style="top:53.333333333333336%;height:6.666666666666667%"></div>
+<div class="hour-line hour-alt" style="top:60.0%;height:6.666666666666667%"></div>
+<div class="hour-line" style="top:66.66666666666666%;height:6.666666666666667%"></div>
+<div class="hour-line hour-alt" style="top:73.33333333333333%;height:6.666666666666667%"></div>
+<div class="hour-line" style="top:80.0%;height:6.666666666666667%"></div>
+<div class="hour-line hour-alt" style="top:86.66666666666667%;height:6.666666666666667%"></div>
+<div class="hour-line" style="top:93.33333333333333%;height:6.666666666666667%"></div>
+<div class="event " style="top:26.666666666666668%;height:20.0%;background:hsl(24, 55%, 82%);border-color:hsl(24, 50%, 50%);animation-delay:0.2s;" data-tooltip="{&quot;name&quot;: &quot;Imperial City&quot;, &quot;time&quot;: &quot;9:00 AM\u201312:00 PM&quot;, &quot;duration&quot;: &quot;180 min&quot;, &quot;location&quot;: &quot;Hue Citadel&quot;, &quot;explicit&quot;: false, &quot;description&quot;: &quot;&quot;}" onmouseenter="showTooltip(event, this)" onmouseleave="hideTooltip()"><div class="event-name">Imperial City</div><div class="event-time">9:00 AM–12:00 PM</div></div>
+</div>
+<div class="day-column" data-date="2025-01-19">
+<div class="hour-line" style="top:0.0%;height:6.666666666666667%"></div>
+<div class="hour-line hour-alt" style="top:6.666666666666667%;height:6.666666666666667%"></div>
+<div class="hour-line" style="top:13.333333333333334%;height:6.666666666666667%"></div>
+<div class="hour-line hour-alt" style="top:20.0%;height:6.666666666666667%"></div>
+<div class="hour-line" style="top:26.666666666666668%;height:6.666666666666667%"></div>
+<div class="hour-line hour-alt" style="top:33.33333333333333%;height:6.666666666666667%"></div>
+<div class="hour-line" style="top:40.0%;height:6.666666666666667%"></div>
+<div class="hour-line hour-alt" style="top:46.666666666666664%;height:6.666666666666667%"></div>
+<div class="hour-line" style="top:53.333333333333336%;height:6.666666666666667%"></div>
+<div class="hour-line hour-alt" style="top:60.0%;height:6.666666666666667%"></div>
+<div class="hour-line" style="top:66.66666666666666%;height:6.666666666666667%"></div>
+<div class="hour-line hour-alt" style="top:73.33333333333333%;height:6.666666666666667%"></div>
+<div class="hour-line" style="top:80.0%;height:6.666666666666667%"></div>
+<div class="hour-line hour-alt" style="top:86.66666666666667%;height:6.666666666666667%"></div>
+<div class="hour-line" style="top:93.33333333333333%;height:6.666666666666667%"></div>
+<div class="event " style="top:60.0%;height:13.333333333333334%;background:hsl(67, 55%, 82%);border-color:hsl(67, 50%, 50%);animation-delay:0.24s;" data-tooltip="{&quot;name&quot;: &quot;Fly to HCMC&quot;, &quot;time&quot;: &quot;2:00 PM\u20134:00 PM&quot;, &quot;duration&quot;: &quot;120 min&quot;, &quot;location&quot;: &quot;Phu Bai Airport&quot;, &quot;explicit&quot;: false, &quot;description&quot;: &quot;&quot;}" onmouseenter="showTooltip(event, this)" onmouseleave="hideTooltip()"><div class="event-name">Fly to HCMC</div><div class="event-time">2:00 PM–4:00 PM</div></div>
+</div>
+    </div>
+  </div>
+</div>
+<div class="week-container" id="week-1" style="display:none">
+  <div class="week-grid">
+    <div class="header-row"><div class="time-gutter-header"></div>
+<div class="day-header has-events"><span class="day-name">Mon</span><span class="day-date">Jan 20</span></div>
+<div class="day-header "><span class="day-name">Tue</span><span class="day-date">Jan 21</span></div>
+<div class="day-header "><span class="day-name">Wed</span><span class="day-date">Jan 22</span></div>
+<div class="day-header "><span class="day-name">Thu</span><span class="day-date">Jan 23</span></div>
+<div class="day-header "><span class="day-name">Fri</span><span class="day-date">Jan 24</span></div>
+<div class="day-header "><span class="day-name">Sat</span><span class="day-date">Jan 25</span></div>
+<div class="day-header "><span class="day-name">Sun</span><span class="day-date">Jan 26</span></div></div>
+    <div class="body-row">
+      <div class="time-gutter">
+<div class="time-label" style="top:0.0%">5 AM</div>
+<div class="time-label alt" style="top:6.666666666666667%">6 AM</div>
+<div class="time-label" style="top:13.333333333333334%">7 AM</div>
+<div class="time-label alt" style="top:20.0%">8 AM</div>
+<div class="time-label" style="top:26.666666666666668%">9 AM</div>
+<div class="time-label alt" style="top:33.33333333333333%">10 AM</div>
+<div class="time-label" style="top:40.0%">11 AM</div>
+<div class="time-label alt" style="top:46.666666666666664%">12 PM</div>
+<div class="time-label" style="top:53.333333333333336%">1 PM</div>
+<div class="time-label alt" style="top:60.0%">2 PM</div>
+<div class="time-label" style="top:66.66666666666666%">3 PM</div>
+<div class="time-label alt" style="top:73.33333333333333%">4 PM</div>
+<div class="time-label" style="top:80.0%">5 PM</div>
+<div class="time-label alt" style="top:86.66666666666667%">6 PM</div>
+<div class="time-label" style="top:93.33333333333333%">7 PM</div>
+</div>
+      <div class="day-column" data-date="2025-01-20">
+<div class="hour-line" style="top:0.0%;height:6.666666666666667%"></div>
+<div class="hour-line hour-alt" style="top:6.666666666666667%;height:6.666666666666667%"></div>
+<div class="hour-line" style="top:13.333333333333334%;height:6.666666666666667%"></div>
+<div class="hour-line hour-alt" style="top:20.0%;height:6.666666666666667%"></div>
+<div class="hour-line" style="top:26.666666666666668%;height:6.666666666666667%"></div>
+<div class="hour-line hour-alt" style="top:33.33333333333333%;height:6.666666666666667%"></div>
+<div class="hour-line" style="top:40.0%;height:6.666666666666667%"></div>
+<div class="hour-line hour-alt" style="top:46.666666666666664%;height:6.666666666666667%"></div>
+<div class="hour-line" style="top:53.333333333333336%;height:6.666666666666667%"></div>
+<div class="hour-line hour-alt" style="top:60.0%;height:6.666666666666667%"></div>
+<div class="hour-line" style="top:66.66666666666666%;height:6.666666666666667%"></div>
+<div class="hour-line hour-alt" style="top:73.33333333333333%;height:6.666666666666667%"></div>
+<div class="hour-line" style="top:80.0%;height:6.666666666666667%"></div>
+<div class="hour-line hour-alt" style="top:86.66666666666667%;height:6.666666666666667%"></div>
+<div class="hour-line" style="top:93.33333333333333%;height:6.666666666666667%"></div>
+<div class="event " style="top:20.0%;height:40.0%;background:hsl(13, 55%, 82%);border-color:hsl(13, 50%, 50%);animation-delay:0.0s;" data-tooltip="{&quot;name&quot;: &quot;Cu Chi Tunnels&quot;, &quot;time&quot;: &quot;8:00 AM\u20132:00 PM&quot;, &quot;duration&quot;: &quot;360 min&quot;, &quot;location&quot;: &quot;Cu Chi&quot;, &quot;explicit&quot;: false, &quot;description&quot;: &quot;&quot;}" onmouseenter="showTooltip(event, this)" onmouseleave="hideTooltip()"><div class="event-name">Cu Chi Tunnels</div><div class="event-time">8:00 AM–2:00 PM</div></div>
+</div>
+<div class="day-column" data-date="2025-01-21">
+<div class="hour-line" style="top:0.0%;height:6.666666666666667%"></div>
+<div class="hour-line hour-alt" style="top:6.666666666666667%;height:6.666666666666667%"></div>
+<div class="hour-line" style="top:13.333333333333334%;height:6.666666666666667%"></div>
+<div class="hour-line hour-alt" style="top:20.0%;height:6.666666666666667%"></div>
+<div class="hour-line" style="top:26.666666666666668%;height:6.666666666666667%"></div>
+<div class="hour-line hour-alt" style="top:33.33333333333333%;height:6.666666666666667%"></div>
+<div class="hour-line" style="top:40.0%;height:6.666666666666667%"></div>
+<div class="hour-line hour-alt" style="top:46.666666666666664%;height:6.666666666666667%"></div>
+<div class="hour-line" style="top:53.333333333333336%;height:6.666666666666667%"></div>
+<div class="hour-line hour-alt" style="top:60.0%;height:6.666666666666667%"></div>
+<div class="hour-line" style="top:66.66666666666666%;height:6.666666666666667%"></div>
+<div class="hour-line hour-alt" style="top:73.33333333333333%;height:6.666666666666667%"></div>
+<div class="hour-line" style="top:80.0%;height:6.666666666666667%"></div>
+<div class="hour-line hour-alt" style="top:86.66666666666667%;height:6.666666666666667%"></div>
+<div class="hour-line" style="top:93.33333333333333%;height:6.666666666666667%"></div>
+</div>
+<div class="day-column" data-date="2025-01-22">
+<div class="hour-line" style="top:0.0%;height:6.666666666666667%"></div>
+<div class="hour-line hour-alt" style="top:6.666666666666667%;height:6.666666666666667%"></div>
+<div class="hour-line" style="top:13.333333333333334%;height:6.666666666666667%"></div>
+<div class="hour-line hour-alt" style="top:20.0%;height:6.666666666666667%"></div>
+<div class="hour-line" style="top:26.666666666666668%;height:6.666666666666667%"></div>
+<div class="hour-line hour-alt" style="top:33.33333333333333%;height:6.666666666666667%"></div>
+<div class="hour-line" style="top:40.0%;height:6.666666666666667%"></div>
+<div class="hour-line hour-alt" style="top:46.666666666666664%;height:6.666666666666667%"></div>
+<div class="hour-line" style="top:53.333333333333336%;height:6.666666666666667%"></div>
+<div class="hour-line hour-alt" style="top:60.0%;height:6.666666666666667%"></div>
+<div class="hour-line" style="top:66.66666666666666%;height:6.666666666666667%"></div>
+<div class="hour-line hour-alt" style="top:73.33333333333333%;height:6.666666666666667%"></div>
+<div class="hour-line" style="top:80.0%;height:6.666666666666667%"></div>
+<div class="hour-line hour-alt" style="top:86.66666666666667%;height:6.666666666666667%"></div>
+<div class="hour-line" style="top:93.33333333333333%;height:6.666666666666667%"></div>
+</div>
+<div class="day-column" data-date="2025-01-23">
+<div class="hour-line" style="top:0.0%;height:6.666666666666667%"></div>
+<div class="hour-line hour-alt" style="top:6.666666666666667%;height:6.666666666666667%"></div>
+<div class="hour-line" style="top:13.333333333333334%;height:6.666666666666667%"></div>
+<div class="hour-line hour-alt" style="top:20.0%;height:6.666666666666667%"></div>
+<div class="hour-line" style="top:26.666666666666668%;height:6.666666666666667%"></div>
+<div class="hour-line hour-alt" style="top:33.33333333333333%;height:6.666666666666667%"></div>
+<div class="hour-line" style="top:40.0%;height:6.666666666666667%"></div>
+<div class="hour-line hour-alt" style="top:46.666666666666664%;height:6.666666666666667%"></div>
+<div class="hour-line" style="top:53.333333333333336%;height:6.666666666666667%"></div>
+<div class="hour-line hour-alt" style="top:60.0%;height:6.666666666666667%"></div>
+<div class="hour-line" style="top:66.66666666666666%;height:6.666666666666667%"></div>
+<div class="hour-line hour-alt" style="top:73.33333333333333%;height:6.666666666666667%"></div>
+<div class="hour-line" style="top:80.0%;height:6.666666666666667%"></div>
+<div class="hour-line hour-alt" style="top:86.66666666666667%;height:6.666666666666667%"></div>
+<div class="hour-line" style="top:93.33333333333333%;height:6.666666666666667%"></div>
+</div>
+<div class="day-column" data-date="2025-01-24">
+<div class="hour-line" style="top:0.0%;height:6.666666666666667%"></div>
+<div class="hour-line hour-alt" style="top:6.666666666666667%;height:6.666666666666667%"></div>
+<div class="hour-line" style="top:13.333333333333334%;height:6.666666666666667%"></div>
+<div class="hour-line hour-alt" style="top:20.0%;height:6.666666666666667%"></div>
+<div class="hour-line" style="top:26.666666666666668%;height:6.666666666666667%"></div>
+<div class="hour-line hour-alt" style="top:33.33333333333333%;height:6.666666666666667%"></div>
+<div class="hour-line" style="top:40.0%;height:6.666666666666667%"></div>
+<div class="hour-line hour-alt" style="top:46.666666666666664%;height:6.666666666666667%"></div>
+<div class="hour-line" style="top:53.333333333333336%;height:6.666666666666667%"></div>
+<div class="hour-line hour-alt" style="top:60.0%;height:6.666666666666667%"></div>
+<div class="hour-line" style="top:66.66666666666666%;height:6.666666666666667%"></div>
+<div class="hour-line hour-alt" style="top:73.33333333333333%;height:6.666666666666667%"></div>
+<div class="hour-line" style="top:80.0%;height:6.666666666666667%"></div>
+<div class="hour-line hour-alt" style="top:86.66666666666667%;height:6.666666666666667%"></div>
+<div class="hour-line" style="top:93.33333333333333%;height:6.666666666666667%"></div>
+</div>
+<div class="day-column" data-date="2025-01-25">
+<div class="hour-line" style="top:0.0%;height:6.666666666666667%"></div>
+<div class="hour-line hour-alt" style="top:6.666666666666667%;height:6.666666666666667%"></div>
+<div class="hour-line" style="top:13.333333333333334%;height:6.666666666666667%"></div>
+<div class="hour-line hour-alt" style="top:20.0%;height:6.666666666666667%"></div>
+<div class="hour-line" style="top:26.666666666666668%;height:6.666666666666667%"></div>
+<div class="hour-line hour-alt" style="top:33.33333333333333%;height:6.666666666666667%"></div>
+<div class="hour-line" style="top:40.0%;height:6.666666666666667%"></div>
+<div class="hour-line hour-alt" style="top:46.666666666666664%;height:6.666666666666667%"></div>
+<div class="hour-line" style="top:53.333333333333336%;height:6.666666666666667%"></div>
+<div class="hour-line hour-alt" style="top:60.0%;height:6.666666666666667%"></div>
+<div class="hour-line" style="top:66.66666666666666%;height:6.666666666666667%"></div>
+<div class="hour-line hour-alt" style="top:73.33333333333333%;height:6.666666666666667%"></div>
+<div class="hour-line" style="top:80.0%;height:6.666666666666667%"></div>
+<div class="hour-line hour-alt" style="top:86.66666666666667%;height:6.666666666666667%"></div>
+<div class="hour-line" style="top:93.33333333333333%;height:6.666666666666667%"></div>
+</div>
+<div class="day-column" data-date="2025-01-26">
+<div class="hour-line" style="top:0.0%;height:6.666666666666667%"></div>
+<div class="hour-line hour-alt" style="top:6.666666666666667%;height:6.666666666666667%"></div>
+<div class="hour-line" style="top:13.333333333333334%;height:6.666666666666667%"></div>
+<div class="hour-line hour-alt" style="top:20.0%;height:6.666666666666667%"></div>
+<div class="hour-line" style="top:26.666666666666668%;height:6.666666666666667%"></div>
+<div class="hour-line hour-alt" style="top:33.33333333333333%;height:6.666666666666667%"></div>
+<div class="hour-line" style="top:40.0%;height:6.666666666666667%"></div>
+<div class="hour-line hour-alt" style="top:46.666666666666664%;height:6.666666666666667%"></div>
+<div class="hour-line" style="top:53.333333333333336%;height:6.666666666666667%"></div>
+<div class="hour-line hour-alt" style="top:60.0%;height:6.666666666666667%"></div>
+<div class="hour-line" style="top:66.66666666666666%;height:6.666666666666667%"></div>
+<div class="hour-line hour-alt" style="top:73.33333333333333%;height:6.666666666666667%"></div>
+<div class="hour-line" style="top:80.0%;height:6.666666666666667%"></div>
+<div class="hour-line hour-alt" style="top:86.66666666666667%;height:6.666666666666667%"></div>
+<div class="hour-line" style="top:93.33333333333333%;height:6.666666666666667%"></div>
+</div>
+    </div>
+  </div>
+</div>
+  <div class="legend">
+    <span class="legend-item"><span class="legend-dot explicit"></span> Explicit time</span>
+    <span class="legend-item"><span class="legend-dot scheduled"></span> Auto-scheduled</span>
+    <span class="legend-item"><span class="legend-dot travel"></span> Travel gap</span>
+  </div>
+</div>
+<footer class="footer">✨ Generated by <span class="footer-brand">WanderlogPro</span></footer>
+<div id="tooltip" class="tooltip"></div>
+<script>
+var TRIP_START="2025-01-13",TRIP_END="2025-01-20",HOUR_START=5,HOUR_END=20;
+
+/* ── Dark Mode Toggle ──────────────────────────────────────── */
+function toggleDark() {
+  document.body.classList.toggle('dark');
+  var btn = document.querySelector('.dark-toggle');
+  btn.textContent = document.body.classList.contains('dark') ? '☀️' : '🌙';
+}
+
+/* ── Sticky Header on scroll ───────────────────────────────── */
+(function() {
+  var header = document.getElementById('stickyHeader');
+  if (!header) return;
+  var hero = document.querySelector('.hero-card');
+  window.addEventListener('scroll', function() {
+    var threshold = hero ? hero.offsetHeight - 60 : 100;
+    if (window.scrollY > threshold) {
+      header.classList.add('visible', 'scrolled');
+    } else {
+      header.classList.remove('visible', 'scrolled');
+    }
+  });
+})();
+
+/* ── Week Navigation with crossfade ────────────────────────── */
+function showWeek(idx) {
+  document.querySelectorAll('.week-container').forEach(function(el, i) {
+    if (i === idx) {
+      el.style.display = 'block';
+      el.style.animation = 'weekFade 0.4s cubic-bezier(0.22,1,0.36,1) both';
+    } else {
+      el.style.display = 'none';
+    }
+  });
+  document.querySelectorAll('.week-tab').forEach(function(el, i) {
+    el.classList.toggle('active', i === idx);
+  });
+}
+
+/* ── Tooltip ───────────────────────────────────────────────── */
+function showTooltip(e, el) {
+  var data = JSON.parse(el.getAttribute('data-tooltip'));
+  var tt = document.getElementById('tooltip');
+  var parts = ['<div class="tt-name">' + escHtml(data.name) + '</div>'];
+  parts.push('<div class="tt-time">' + escHtml(data.time) + ' (' + escHtml(data.duration) + ')</div>');
+  if (data.location) {
+    parts.push('<div class="tt-location">📍 ' + escHtml(data.location) + '</div>');
+  }
+  if (data.description && data.description !== data.location) {
+    parts.push('<div class="tt-desc">' + escHtml(data.description) + '</div>');
+  }
+  if (data.explicit) {
+    parts.push('<div class="tt-explicit">⚡ Pinned</div>');
+  }
+  tt.innerHTML = parts.join('');
+  tt.style.display = 'block';
+  requestAnimationFrame(function() { tt.classList.add('visible'); });
+
+  var rect = el.getBoundingClientRect();
+  var tx = rect.right + 10;
+  var ty = rect.top;
+  if (tx + 320 > window.innerWidth) tx = rect.left - 330;
+  if (ty + 180 > window.innerHeight) ty = window.innerHeight - 190;
+  if (ty < 8) ty = 8;
+  tt.style.left = tx + 'px';
+  tt.style.top = ty + 'px';
+}
+
+function hideTooltip() {
+  var tt = document.getElementById('tooltip');
+  tt.classList.remove('visible');
+  setTimeout(function() { tt.style.display = 'none'; }, 200);
+}
+
+function escHtml(s) {
+  var d = document.createElement('div');
+  d.textContent = s;
+  return d.innerHTML;
+}
+
+/* ── Init: current-time line ────────────────────────────────── */
+document.addEventListener('DOMContentLoaded', function() {
+  var now = new Date();
+  var todayStr = now.getFullYear() + '-' +
+    String(now.getMonth()+1).padStart(2,'0') + '-' +
+    String(now.getDate()).padStart(2,'0');
+  if (todayStr >= TRIP_START && todayStr <= TRIP_END) {
+    document.querySelectorAll('.day-column').forEach(function(col) {
+      if (col.getAttribute('data-date') === todayStr) {
+        var mins = now.getHours() * 60 + now.getMinutes();
+        var totalMins = (HOUR_END - HOUR_START) * 60;
+        var pct = ((mins - HOUR_START * 60) / totalMins) * 100;
+        if (pct >= 0 && pct <= 100) {
+          var line = document.createElement('div');
+          line.className = 'now-line';
+          line.style.top = pct + '%';
+          col.appendChild(line);
+        }
+      }
+    });
+  }
+});
+
+</script>
+</body>
+</html>

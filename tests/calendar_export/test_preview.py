@@ -144,13 +144,13 @@ class TestGroupDaysIntoWeeks:
     def test_empty_input(self):
         assert _group_days_into_weeks([]) == []
 
-    def test_week_aligned_to_monday(self):
+    def test_week_aligned_to_sunday(self):
         # Wednesday 2026-04-22
         day_events = [("2026-04-22", [{"summary": "A"}])]
         weeks = _group_days_into_weeks(day_events)
-        # Week should start on Monday 2026-04-20
-        assert weeks[0][0][0] == "2026-04-20"
-        assert weeks[0][6][0] == "2026-04-26"  # Sunday
+        # Week should start on Sunday 2026-04-19
+        assert weeks[0][0][0] == "2026-04-19"
+        assert weeks[0][6][0] == "2026-04-25"  # Saturday
 
 
 class TestTimeRange:
@@ -346,7 +346,6 @@ class TestTimezoneNote:
     def test_different_timezone_shows_note(self):
         note = _timezone_note("Asia/Ho_Chi_Minh", "2026-04-20")
         assert "Asia/Ho_Chi_Minh" in note
-        assert "destination" in note
         assert "hour" in note
 
     def test_note_contains_hour_difference(self):
@@ -369,7 +368,7 @@ class TestTimezoneNote:
             )
         ]
         result = generate_preview_html("Trip", day_events, timezone="Asia/Ho_Chi_Minh")
-        assert "tz-note" in result
+        assert "tz-badge" in result
         assert "Asia/Ho_Chi_Minh" in result
 
     def test_generate_preview_no_banner_without_timezone(self):
