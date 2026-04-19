@@ -26,5 +26,10 @@ dev = [
 [project.scripts]
 wanderlogpro = "wanderlogpro.cli:main"
 
-[tool.setuptools.packages.find]
-where = ["src"]
+[tool.setuptools.package-dir]
+wanderlogpro = "src"
+"wanderlogpro.calendar_export" = "src/calendar_export"
+"wanderlogpro.map_export" = "src/map_export"
+
+[tool.setuptools]
+packages = ["wanderlogpro", "wanderlogpro.calendar_export", "wanderlogpro.map_export"]
