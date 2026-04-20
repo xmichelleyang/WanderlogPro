@@ -191,11 +191,13 @@ def build_event(
     return event
 
 
-def schedule_day(day: ItineraryDay, timezone: str = "") -> list[dict]:
+def schedule_day(
+    day: ItineraryDay, timezone: str = "", start_hour: int = DEFAULT_START_HOUR,
+) -> list[dict]:
     """Schedule all items in a day and return Google Calendar event bodies.
 
     Scheduling rules:
-    - First item starts at 10:00 AM unless it has an explicit start time.
+    - First item starts at ``start_hour`` unless it has an explicit start time.
     - Each item's duration comes from Wanderlog (fallback: 60 minutes).
     - Travel time gaps are inserted between consecutive events.
     - Explicit start times override the sequential calculation.
@@ -203,6 +205,8 @@ def schedule_day(day: ItineraryDay, timezone: str = "") -> list[dict]:
     Args:
         day: An ItineraryDay with ordered items.
         timezone: IANA timezone for events. Empty for dry-run (no tz).
+        start_hour: Hour of the day (0–23) at which auto-scheduled events
+            begin when no explicit time is set. Defaults to 10 (10 AM).
 
     Returns:
         List of Google Calendar event resource dicts.
@@ -211,7 +215,7 @@ def schedule_day(day: ItineraryDay, timezone: str = "") -> list[dict]:
         return []
 
     base_date = datetime.fromisoformat(day.date)
-    current_time = base_date.replace(hour=DEFAULT_START_HOUR, minute=0, second=0)
+    current_time = base_date.replace(hour=start_hour, minute=0, second=0)
     events: list[dict] = []
 
     for i, item in enumerate(day.items):
@@ -270,20 +274,24 @@ def _parse_item_time(date_str: str, time_str: str) -> datetime:
     )
 
 
-def preview_trip_events(trip: CalendarTrip) -> list[tuple[str, list[dict]]]:
+def preview_trip_events(
+    trip: CalendarTrip, start_hour: int = DEFAULT_START_HOUR,
+) -> list[tuple[str, list[dict]]]:
     """Build all scheduled events without calling the Google Calendar API.
 
     Reuses schedule_day() for each day and returns the results grouped by day.
 
     Args:
         trip: A CalendarTrip with itinerary days.
+        start_hour: Hour of the day (0–23) at which auto-scheduled events
+            begin. Defaults to 10 (10 AM).
 
     Returns:
         List of (date_string, events) tuples — one per day.
     """
     result: list[tuple[str, list[dict]]] = []
     for day in trip.days:
-        events = schedule_day(day)  # No timezone — dry-run shows raw local times
+        events = schedule_day(day, start_hour=start_hour)
         if events:
             result.append((day.date, events))
     return result
@@ -291,6 +299,7 @@ def preview_trip_events(trip: CalendarTrip) -> list[tuple[str, list[dict]]]:
 
 def export_trip_to_gcal(
     trip: CalendarTrip,
+    start_hour: int = DEFAULT_START_HOUR,
 ) -> tuple[str, int]:
     """Export a trip's itinerary to Google Calendar.
 
@@ -299,6 +308,8 @@ def export_trip_to_gcal(
 
     Args:
         trip: A CalendarTrip with itinerary days.
+        start_hour: Hour of the day (0–23) at which auto-scheduled events
+            begin. Defaults to 10 (10 AM).
 
     Returns:
         Tuple of (calendar_id, event_count).
@@ -311,7 +322,7 @@ def export_trip_to_gcal(
     event_count = 0
 
     for day in trip.days:
-        events = schedule_day(day, tz)
+        events = schedule_day(day, tz, start_hour=start_hour)
         for event in events:
             service.events().insert(
                 calendarId=calendar_id, body=event

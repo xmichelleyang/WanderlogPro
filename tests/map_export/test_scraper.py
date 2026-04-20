@@ -3,7 +3,7 @@
 import pytest
 
 from wanderlogpro.map_export.scraper import _parse_trip_response
-from wanderlogpro.utils import parse_trip_id
+from wanderlogpro.utils import normalize_wanderlog_url, parse_trip_id
 
 
 class TestParseTripId:
@@ -29,6 +29,44 @@ class TestParseTripId:
     def test_empty_string_raises(self):
         with pytest.raises(ValueError):
             parse_trip_id("")
+
+    def test_plan_url_standard(self):
+        assert parse_trip_id("https://wanderlog.com/plan/abc123/my-trip/shared") == "abc123"
+
+    def test_plan_url_without_suffix(self):
+        assert parse_trip_id("https://wanderlog.com/plan/abc123/my-trip") == "abc123"
+
+    def test_plan_url_bare(self):
+        assert parse_trip_id("wanderlog.com/plan/abc123") == "abc123"
+
+    def test_plan_url_long_id(self):
+        assert parse_trip_id("https://wanderlog.com/plan/gpaxvjfljkfalyeh/trip-to-vietnam/shared") == "gpaxvjfljkfalyeh"
+
+
+class TestNormalizeWanderlogUrl:
+    def test_view_url_unchanged(self):
+        url = "https://wanderlog.com/view/abc123/my-trip"
+        assert normalize_wanderlog_url(url) == url
+
+    def test_plan_url_unchanged(self):
+        url = "https://wanderlog.com/plan/abc123/my-trip"
+        assert normalize_wanderlog_url(url) == url
+
+    def test_plan_url_with_shared_suffix_unchanged(self):
+        url = "https://wanderlog.com/plan/abc123/my-trip/shared"
+        assert normalize_wanderlog_url(url) == url
+
+    def test_missing_scheme_gets_https_plan(self):
+        assert (
+            normalize_wanderlog_url("wanderlog.com/plan/abc123")
+            == "https://wanderlog.com/plan/abc123"
+        )
+
+    def test_missing_scheme_gets_https_view(self):
+        assert (
+            normalize_wanderlog_url("wanderlog.com/view/abc123/trip")
+            == "https://wanderlog.com/view/abc123/trip"
+        )
 
 
 SAMPLE_TRIP_DATA = {

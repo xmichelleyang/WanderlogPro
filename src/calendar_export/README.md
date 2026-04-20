@@ -31,6 +31,7 @@ python -m wanderlogpro.cli calendar <TRIP_URL> [OPTIONS]
 | `TRIP_URL` | **(Required)** Your Wanderlog trip URL |
 | `--cookie`, `-c` | Session cookie for private trips |
 | `--dry-run` | Preview events in a week-view HTML page in your browser — no Google sign-in needed |
+| `--start-hour`, `-s` | Hour (0–23) at which auto-scheduled events start each day (default: 10) |
 
 ### Examples
 
@@ -40,6 +41,9 @@ python -m wanderlogpro.cli calendar https://wanderlog.com/view/abcd1234/my-trip
 
 # Preview what events would be created (opens an HTML week-view in your browser)
 python -m wanderlogpro.cli calendar https://wanderlog.com/view/abcd1234/my-trip --dry-run
+
+# Start each day at 9 AM instead of the default 10 AM
+python -m wanderlogpro.cli calendar https://wanderlog.com/view/abcd1234/my-trip --start-hour 9
 
 # Private trip with session cookie
 python -m wanderlogpro.cli calendar https://wanderlog.com/view/abcd1234/my-trip -c "session=eyJhbGci..."
@@ -88,7 +92,7 @@ No events are created — once you're happy with the preview, run again without 
 
 | Rule | Details |
 |---|---|
-| **Day start** | 10:00 AM if the first item has no specific time |
+| **Day start** | `--start-hour` value (default 10:00 AM) if the first item has no specific time |
 | **Event duration** | Uses Wanderlog's "average time spent" per item; falls back to 1 hour |
 | **Travel gaps** | Travel time between items (from Wanderlog) is inserted as a gap between events |
 | **Explicit times** | If an item has a specific start time (e.g., a ticket entry time), that time is used and the event title is prefixed with `[!]` |
@@ -182,7 +186,7 @@ rm ~/.wanderlogpro/token.json
 1. **URL Parsing** — Extracts the trip ID from a Wanderlog URL
 2. **Page Scraping** — Fetches the Wanderlog trip page and extracts the embedded JSON blob
 3. **Itinerary Parsing** — Filters `dayPlan` sections (not `placeList` sections), extracts place metadata for durations and travel times between places
-4. **Smart Scheduling** — For each day: starts at 10 AM (unless explicit time), applies Wanderlog durations, inserts travel time gaps between events
+4. **Smart Scheduling** — For each day: starts at `--start-hour` (default 10 AM, unless explicit time), applies Wanderlog durations, inserts travel time gaps between events
 5. **Google Calendar API** — Creates a sub-calendar for the trip and inserts each item as an event with title, location, description, and proper start/end times
 
 ---

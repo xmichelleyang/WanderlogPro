@@ -12,8 +12,10 @@ import re
 import requests
 from timezonefinder import TimezoneFinder
 
-from wanderlogpro.calendar_export.models import CalendarTrip, ItineraryDay, ItineraryItem
-from wanderlogpro.utils import parse_trip_id
+from wanderlogpro.calendar_export.models import (
+    CalendarTrip, FlightInfo, HotelInfo, ItineraryDay, ItineraryItem,
+)
+from wanderlogpro.utils import normalize_wanderlog_url, parse_trip_id
 
 _tf = None  # lazy singleton
 
@@ -36,12 +38,13 @@ def fetch_itinerary(url: str, cookie: str | None = None) -> CalendarTrip:
         cookie: Optional session cookie for private trips.
     """
     trip_id = parse_trip_id(url)
+    page_url = normalize_wanderlog_url(url)
 
     headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"}
     if cookie:
         headers["Cookie"] = cookie
 
-    resp = requests.get(url, headers=headers, timeout=30)
+    resp = requests.get(page_url, headers=headers, timeout=30)
 
     if resp.status_code == 404:
         raise ValueError(f"Trip not found: {trip_id}. Is the URL correct?")
@@ -117,9 +120,14 @@ def _parse_itinerary_response(trip_id: str, data: dict) -> CalendarTrip:
 
         blocks = section.get("blocks", [])
         items: list[ItineraryItem] = []
+        day_notes_parts: list[str] = []
 
         for i, block in enumerate(blocks):
             if block.get("type") != "place":
+                # Collect day-level text notes (non-place blocks)
+                text_content = _extract_notes(block.get("text", {}))
+                if text_content:
+                    day_notes_parts.append(text_content)
                 continue
 
             place = block.get("place", {})
@@ -132,8 +140,10 @@ def _parse_itinerary_response(trip_id: str, data: dict) -> CalendarTrip:
             lng = location.get("lng", 0.0)
             address = place.get("formatted_address", place.get("vicinity", ""))
             notes = _extract_notes(block.get("text", {}))
+            description = _extract_description(place, date)
             icon = ""
             place_id = place.get("place_id", "")
+            google_types = place.get("types", [])
 
             # Time fields from block
             start_time = block.get("startTime") or ""
@@ -163,21 +173,103 @@ def _parse_itinerary_response(trip_id: str, data: dict) -> CalendarTrip:
                 lng=lng,
                 address=address,
                 notes=notes,
+                description=description,
                 icon=icon,
                 start_time=str(start_time) if start_time else "",
                 end_time=str(end_time) if end_time else "",
                 duration_minutes=duration_minutes,
                 travel_minutes_to_next=travel_minutes,
                 travel_mode=actual_travel_mode,
+                google_types=google_types,
             ))
 
-        if items:
-            days.append(ItineraryDay(date=date, items=items))
+        day_notes = "\n".join(day_notes_parts)
+        days.append(ItineraryDay(date=date, items=items, notes=day_notes))
+
+    # Extract flights and hotels from placeList sections
+    flights = _extract_flights(sections)
+    hotels = _extract_hotels(sections)
 
     # Auto-detect timezone from first place's coordinates
     timezone = _detect_timezone(days)
 
-    return CalendarTrip(id=trip_id, name=trip_name, days=days, timezone=timezone)
+    return CalendarTrip(
+        id=trip_id, name=trip_name, days=days, timezone=timezone,
+        flights=flights, hotels=hotels,
+    )
+
+
+def _extract_flights(sections: list[dict]) -> list[FlightInfo]:
+    """Extract flight info from placeList sections."""
+    flights: list[FlightInfo] = []
+    for section in sections:
+        for block in section.get("blocks", []):
+            if block.get("type") != "flight":
+                continue
+            depart = block.get("depart", {})
+            arrive = block.get("arrive", {})
+            flight_info = block.get("flightInfo", {})
+            airline_data = flight_info.get("airline", {})
+
+            travelers = block.get("travelerNames", [])
+            notes = _extract_notes(block.get("text", {}))
+
+            flights.append(FlightInfo(
+                airline=airline_data.get("name", ""),
+                flight_number=str(flight_info.get("number", "")),
+                depart_airport=depart.get("airport", {}).get("iata", ""),
+                depart_airport_name=depart.get("airport", {}).get("name", ""),
+                depart_date=depart.get("date", ""),
+                depart_time=depart.get("time", ""),
+                arrive_airport=arrive.get("airport", {}).get("iata", ""),
+                arrive_airport_name=arrive.get("airport", {}).get("name", ""),
+                arrive_date=arrive.get("date", ""),
+                arrive_time=arrive.get("time", ""),
+                travelers=", ".join(travelers) if travelers else "",
+                confirmation=block.get("confirmationNumber", ""),
+                notes=notes,
+            ))
+    return flights
+
+
+def _extract_hotels(sections: list[dict]) -> list[HotelInfo]:
+    """Extract hotel info from placeList sections."""
+    hotels: list[HotelInfo] = []
+    for section in sections:
+        for block in section.get("blocks", []):
+            if block.get("type") != "place":
+                continue
+            hotel_data = block.get("hotel")
+            if not hotel_data:
+                continue
+
+            place = block.get("place", {})
+            check_in = hotel_data.get("checkIn", "")
+            check_out = hotel_data.get("checkOut", "")
+            nights = 0
+            if check_in and check_out:
+                try:
+                    from datetime import datetime
+                    ci = datetime.strptime(check_in, "%Y-%m-%d")
+                    co = datetime.strptime(check_out, "%Y-%m-%d")
+                    nights = (co - ci).days
+                except ValueError:
+                    pass
+
+            travelers = hotel_data.get("travelerNames", [])
+            notes = _extract_notes(block.get("text", {}))
+
+            hotels.append(HotelInfo(
+                name=place.get("name", ""),
+                address=place.get("formatted_address", place.get("vicinity", "")),
+                check_in=check_in,
+                check_out=check_out,
+                nights=nights,
+                confirmation=hotel_data.get("confirmationNumber", ""),
+                travelers=", ".join(travelers) if travelers else "",
+                notes=notes,
+            ))
+    return hotels
 
 
 def _detect_timezone(days: list[ItineraryDay]) -> str:
@@ -286,3 +378,32 @@ def _extract_notes(text_obj: dict) -> str:
         if isinstance(insert, str) and insert.strip():
             parts.append(insert.strip())
     return " ".join(parts)
+
+
+def _extract_description(place: dict, date_str: str = "") -> str:
+    """Extract a place description from opening hours.
+
+    If date_str is provided (ISO format like '2026-03-18'), only the matching
+    weekday's hours are returned. Otherwise all days are shown.
+    """
+    # Opening hours
+    opening_hours = place.get("opening_hours", {})
+    if not opening_hours or not isinstance(opening_hours, dict):
+        return ""
+
+    weekday_text = opening_hours.get("weekday_text", [])
+    if not weekday_text or not isinstance(weekday_text, list):
+        return ""
+
+    # Filter to relevant day if date provided
+    if date_str and len(weekday_text) == 7:
+        try:
+            from datetime import datetime
+            dt = datetime.strptime(date_str[:10], "%Y-%m-%d")
+            # weekday_text is Mon(0)–Sun(6), Python weekday() is Mon(0)–Sun(6)
+            idx = dt.weekday()
+            return weekday_text[idx]
+        except (ValueError, IndexError):
+            pass
+
+    return "; ".join(weekday_text)

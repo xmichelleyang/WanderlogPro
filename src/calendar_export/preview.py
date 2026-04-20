@@ -137,18 +137,13 @@ def _travel_emoji(mode: str) -> str:
 
 
 def _event_color(summary: str) -> str:
-    """Deterministic warm-toned pastel color from event name."""
-    warm_hues = [15, 25, 35, 45, 340, 350, 10, 20, 30, 50, 60, 320]
-    idx = hash(summary) % len(warm_hues)
-    h = warm_hues[idx] + (hash(summary) % 15)
-    return f"hsl({h}, 55%, 82%)"
+    """Shared warm peach/amber pastel for all dry-run events."""
+    return "hsl(30, 55%, 82%)"
 
 
 def _event_border_color(summary: str) -> str:
-    warm_hues = [15, 25, 35, 45, 340, 350, 10, 20, 30, 50, 60, 320]
-    idx = hash(summary) % len(warm_hues)
-    h = warm_hues[idx] + (hash(summary) % 15)
-    return f"hsl({h}, 50%, 50%)"
+    """Shared darker companion to `_event_color` for all dry-run events."""
+    return "hsl(30, 50%, 50%)"
 
 
 def _fmt_hour(h: int) -> str:

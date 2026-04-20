@@ -30,6 +30,7 @@ wanderlogpro = "wanderlogpro.cli:main"
 wanderlogpro = "src"
 "wanderlogpro.calendar_export" = "src/calendar_export"
 "wanderlogpro.map_export" = "src/map_export"
+"wanderlogpro.offline_mode" = "src/offline_mode"
 
 [tool.setuptools]
-packages = ["wanderlogpro", "wanderlogpro.calendar_export", "wanderlogpro.map_export"]
+packages = ["wanderlogpro", "wanderlogpro.calendar_export", "wanderlogpro.map_export", "wanderlogpro.offline_mode"]

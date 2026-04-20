@@ -201,8 +201,34 @@ class TestScheduleDay:
         assert events[0]["start"]["timeZone"] == "Asia/Ho_Chi_Minh"
         assert events[0]["end"]["timeZone"] == "Asia/Ho_Chi_Minh"
 
+    def test_custom_start_hour(self):
+        day = ItineraryDay(
+            date="2026-04-20",
+            items=[ItineraryItem(name="A", lat=0, lng=0, duration_minutes=60)],
+        )
+        events = schedule_day(day, start_hour=9)
+        assert events[0]["start"]["dateTime"] == "2026-04-20T09:00:00"
+        assert events[0]["end"]["dateTime"] == "2026-04-20T10:00:00"
 
-class TestParseItemTime:
+    def test_start_hour_early_morning(self):
+        day = ItineraryDay(
+            date="2026-04-20",
+            items=[ItineraryItem(name="A", lat=0, lng=0, duration_minutes=30)],
+        )
+        events = schedule_day(day, start_hour=6)
+        assert events[0]["start"]["dateTime"] == "2026-04-20T06:00:00"
+
+    def test_start_hour_does_not_override_explicit_time(self):
+        day = ItineraryDay(
+            date="2026-04-20",
+            items=[
+                ItineraryItem(name="A", lat=0, lng=0, start_time="14:00", duration_minutes=60),
+            ],
+        )
+        events = schedule_day(day, start_hour=8)
+        # Explicit time wins over start_hour
+        assert events[0]["start"]["dateTime"] == "2026-04-20T14:00:00"
+
     def test_hh_mm_format(self):
         result = _parse_item_time("2026-04-20", "14:00")
         assert result == datetime(2026, 4, 20, 14, 0)

@@ -1,11 +1,12 @@
 # WanderlogPro
 
-Export your [Wanderlog](https://wanderlog.com) trips to **Google My Maps** and **Google Calendar** from the command line.
+Export your [Wanderlog](https://wanderlog.com) trips to **Google My Maps**, **Google Calendar**, and an **offline trip guide** from the command line.
 
-| Module | What it does | Docs |
-|---|---|---|
-| **[Map Export](src/wanderlogpro/map_export/README.md)** | Wanderlog lists → styled KML layers for Google My Maps | [map_export README](src/wanderlogpro/map_export/README.md) |
-| **[Calendar Export](src/wanderlogpro/calendar_export/README.md)** | Wanderlog itinerary → Google Calendar events with smart scheduling | [calendar_export README](src/wanderlogpro/calendar_export/README.md) |
+| Module | What it does |
+|---|---|
+| **Map Export** | Wanderlog lists → styled KML layers for Google My Maps |
+| **Calendar Export** | Wanderlog itinerary → Google Calendar events with smart scheduling |
+| **Offline Mode** | Wanderlog itinerary → beautiful mobile PWA you can use on a trip without internet |
 
 ---
 
@@ -105,24 +106,45 @@ A browser window opens for Google sign-in. After approval, a token is cached at 
 
 > **Note:** If `wanderlogpro` is not on your PATH, use `python -m wanderlogpro.cli` instead.
 
-### Run one command
+### Map export — KML for Google My Maps
 
 ```bash
-# Map export only — generates a .kml file you import into Google My Maps
 python -m wanderlogpro.cli export https://wanderlog.com/view/abcd1234/my-trip
-
-# Calendar export only — creates a Google Calendar sub-calendar with events
-python -m wanderlogpro.cli calendar https://wanderlog.com/view/abcd1234/my-trip
 ```
 
-### Run both at once
+### Calendar export — Google Calendar events
 
 ```bash
-# Exports KML + creates Google Calendar events in a single run
+python -m wanderlogpro.cli calendar https://wanderlog.com/view/abcd1234/my-trip
+
+# Preview without creating events
+python -m wanderlogpro.cli calendar https://wanderlog.com/view/abcd1234/my-trip --dry-run
+```
+
+### Offline mode — mobile PWA
+
+```bash
+python -m wanderlogpro.cli offline-mode https://wanderlog.com/view/abcd1234/my-trip
+```
+
+Generates a single self-contained HTML file with:
+- ✈️ **Flights** and 🏨 **Hotels** sections (auto-detected)
+- 📅 **Day-by-day itinerary** with swipeable tabs
+- Tap any address → opens Google Maps for navigation
+- **Add to Home Screen** on Android for a fullscreen app experience
+- **Works offline** after first open (service worker caches everything)
+- Beautiful mesh gradient UI with dark mode
+
+**How to get it on your phone:**
+- Email it to yourself → open in Chrome → Add to Home Screen
+- Upload to Google Drive / OneDrive → open on phone
+- Nearby Share (Android)
+
+### Both map + calendar at once
+
+```bash
 python -m wanderlogpro.cli all https://wanderlog.com/view/abcd1234/my-trip
 ```
-
-The `all` command runs map export first (outputs a `.kml` file), then calendar export (creates Google Calendar events). If one part fails or is missing prerequisites (e.g., no `credentials.json`), the other still runs.
 
 ---
 
@@ -136,27 +158,29 @@ Export a Wanderlog trip to a styled KML file for Google My Maps.
 python -m wanderlogpro.cli export <TRIP_URL> [--output/-o FILE] [--cookie/-c COOKIE]
 ```
 
-→ Full docs: [map_export README](src/wanderlogpro/map_export/README.md)
-
 ### `calendar`
 
 Export a Wanderlog trip's day-by-day itinerary to Google Calendar.
 
 ```
-python -m wanderlogpro.cli calendar <TRIP_URL> [--cookie/-c COOKIE] [--dry-run]
+python -m wanderlogpro.cli calendar <TRIP_URL> [--cookie/-c COOKIE] [--dry-run] [--start-hour/-s HOUR]
 ```
 
-→ Full docs: [calendar_export README](src/wanderlogpro/calendar_export/README.md)
+### `offline-mode`
+
+Generate an offline trip viewer as a self-contained HTML/PWA file.
+
+```
+python -m wanderlogpro.cli offline-mode <TRIP_URL> [--output/-o FILE] [--cookie/-c COOKIE]
+```
 
 ### `all`
 
-Run both exports in one shot.
+Run both map export and calendar export in one shot.
 
 ```
-python -m wanderlogpro.cli all <TRIP_URL> [--output/-o FILE] [--cookie/-c COOKIE] [--dry-run]
+python -m wanderlogpro.cli all <TRIP_URL> [--output/-o FILE] [--cookie/-c COOKIE] [--dry-run] [--start-hour/-s HOUR]
 ```
-
-Combines all options from `export` and `calendar`.
 
 ---
 
@@ -164,9 +188,10 @@ Combines all options from `export` and `calendar`.
 
 | Option | Applies to | Description |
 |---|---|---|
-| `--cookie`, `-c` | all commands | Session cookie for private trips ([how to get it](src/wanderlogpro/map_export/README.md#exporting-private-trips)) |
-| `--output`, `-o` | `export`, `all` | KML output file path (default: `<trip-name>.kml`) |
+| `--cookie`, `-c` | all commands | Session cookie for private trips |
+| `--output`, `-o` | `export`, `all`, `offline-mode` | Output file path (KML or HTML) |
 | `--dry-run` | `calendar`, `all` | Preview calendar events in a week-view HTML page without creating them |
+| `--start-hour`, `-s` | `calendar`, `all` | Hour (0–23) at which auto-scheduled events start each day (default: 10) |
 
 ---
 
@@ -175,22 +200,25 @@ Combines all options from `export` and `calendar`.
 ```
 WanderlogPro/
 ├── pyproject.toml
-├── README.md                              # This file
+├── README.md
 ├── src/
-│   └── wanderlogpro/
-│       ├── cli.py                         # CLI entrypoint (export, calendar, all)
-│       ├── utils.py                       # Shared utilities (parse_trip_id)
-│       ├── map_export/                    # → see map_export/README.md
-│       │   ├── models.py, scraper.py
-│       │   ├── kml_export.py, icon_map.py
-│       │   └── README.md
-│       └── calendar_export/               # → see calendar_export/README.md
-│           ├── models.py, scraper.py
-│           ├── gcal_export.py
-│           └── README.md
+│   ├── cli.py                         # CLI entrypoint (export, calendar, all, offline-mode)
+│   ├── utils.py                       # Shared utilities (parse_trip_id)
+│   ├── map_export/                    # Wanderlog → KML for Google My Maps
+│   │   ├── models.py, scraper.py
+│   │   ├── kml_export.py, icon_map.py
+│   │   └── README.md
+│   ├── calendar_export/               # Wanderlog → Google Calendar events
+│   │   ├── models.py, scraper.py
+│   │   ├── gcal_export.py, preview.py
+│   │   └── README.md
+│   └── offline_mode/                   # Offline trip viewer (PWA)
+│       ├── models.py, builder.py
+│       └── generator.py
 └── tests/
-    ├── map_export/                        # 75 tests
-    └── calendar_export/                   # 54 tests
+    ├── map_export/
+    ├── calendar_export/
+    └── offline_mode/
 ```
 
 ---

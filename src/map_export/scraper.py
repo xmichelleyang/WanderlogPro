@@ -6,14 +6,12 @@ import re
 import requests
 
 from wanderlogpro.map_export.models import Place, PlaceList, Trip
-from wanderlogpro.utils import parse_trip_id
+from wanderlogpro.utils import normalize_wanderlog_url, parse_trip_id
 
 
 def _normalize_wanderlog_url(url: str) -> str:
-    """Ensure the URL has a scheme and points to the shared view."""
-    if not url.startswith("http"):
-        url = "https://" + url
-    return url
+    """Ensure the URL has a scheme and points to the public /view/ page."""
+    return normalize_wanderlog_url(url)
 
 
 def _extract_trip_json(html: str) -> dict:

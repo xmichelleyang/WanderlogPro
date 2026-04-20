@@ -6,6 +6,7 @@ from wanderlogpro.calendar_export.scraper import (
     _build_distance_map,
     _build_place_metadata,
     _detect_timezone,
+    _extract_description,
     _extract_notes,
     _get_duration,
     _lookup_travel_time,
@@ -216,7 +217,8 @@ class TestParseItineraryResponse:
         trip = _parse_itinerary_response("t1", data)
         assert trip.days == []
 
-    def test_day_without_blocks_skipped(self):
+    def test_day_without_blocks_included(self):
+        """Empty dayPlan sections should still create a day entry."""
         data = {
             "tripPlan": {
                 "title": "Test",
@@ -229,7 +231,9 @@ class TestParseItineraryResponse:
             "resources": {},
         }
         trip = _parse_itinerary_response("t1", data)
-        assert trip.days == []
+        assert len(trip.days) == 1
+        assert trip.days[0].date == "2026-04-20"
+        assert trip.days[0].items == []
 
     def test_day_without_date_skipped(self):
         data = {
@@ -605,3 +609,194 @@ class TestDetectTimezone:
         trip = _parse_itinerary_response("test", SAMPLE_TRIP_STORE)
         # SAMPLE_TRIP_STORE has Paris coordinates (lat=48.86, lng=2.35)
         assert trip.timezone == "Europe/Paris"
+
+
+class TestExtractDescription:
+    def test_opening_hours(self):
+        place = {
+            "opening_hours": {
+                "weekday_text": [
+                    "Monday: 9 AM\u20135 PM",
+                    "Tuesday: 9 AM\u20135 PM",
+                ]
+            }
+        }
+        desc = _extract_description(place)
+        assert "Monday: 9 AM" in desc
+        assert "Tuesday: 9 AM" in desc
+
+    def test_rating_only_ignored(self):
+        """Rating-only places return empty description."""
+        place = {"rating": 4.5, "user_ratings_total": 1200}
+        desc = _extract_description(place)
+        assert desc == ""
+
+    def test_rating_not_in_description(self):
+        """Rating is no longer included in description."""
+        place = {"rating": 3.8}
+        desc = _extract_description(place)
+        assert desc == ""
+
+    def test_opening_hours_without_rating(self):
+        place = {
+            "opening_hours": {"weekday_text": ["Monday: 10 AM\u20136 PM"]},
+            "rating": 4.2,
+            "user_ratings_total": 500,
+        }
+        desc = _extract_description(place)
+        assert "Monday: 10 AM" in desc
+        assert "4.2" not in desc
+
+    def test_date_filters_to_weekday(self):
+        """Passing a Monday date returns only Monday's hours."""
+        place = {
+            "opening_hours": {
+                "weekday_text": [
+                    "Monday: 9 AM\u20135 PM",
+                    "Tuesday: 10 AM\u20134 PM",
+                    "Wednesday: 9 AM\u20135 PM",
+                    "Thursday: 9 AM\u20135 PM",
+                    "Friday: 9 AM\u20138 PM",
+                    "Saturday: 10 AM\u20136 PM",
+                    "Sunday: Closed",
+                ]
+            }
+        }
+        # 2026-03-16 is a Monday
+        desc = _extract_description(place, "2026-03-16")
+        assert desc == "Monday: 9 AM\u20135 PM"
+
+    def test_date_filters_saturday(self):
+        place = {
+            "opening_hours": {
+                "weekday_text": [
+                    "Monday: 9 AM\u20135 PM",
+                    "Tuesday: 10 AM\u20134 PM",
+                    "Wednesday: 9 AM\u20135 PM",
+                    "Thursday: 9 AM\u20135 PM",
+                    "Friday: 9 AM\u20138 PM",
+                    "Saturday: 10 AM\u20136 PM",
+                    "Sunday: Closed",
+                ]
+            }
+        }
+        # 2026-03-21 is a Saturday
+        desc = _extract_description(place, "2026-03-21")
+        assert desc == "Saturday: 10 AM\u20136 PM"
+
+    def test_no_date_shows_all(self):
+        """Without date, all 7 days are shown."""
+        place = {
+            "opening_hours": {
+                "weekday_text": ["Mon: 9-5", "Tue: 9-5", "Wed: 9-5", "Thu: 9-5", "Fri: 9-5", "Sat: 10-4", "Sun: Closed"]
+            }
+        }
+        desc = _extract_description(place)
+        assert "Mon:" in desc and "Sun:" in desc
+
+    def test_empty_place(self):
+        assert _extract_description({}) == ""
+
+    def test_no_weekday_text(self):
+        place = {"opening_hours": {}}
+        assert _extract_description(place) == ""
+
+    def test_invalid_opening_hours_type(self):
+        place = {"opening_hours": "not a dict"}
+        assert _extract_description(place) == ""
+
+
+class TestDayNotes:
+    def test_text_blocks_collected_as_day_notes(self):
+        """Text blocks in a dayPlan section become ItineraryDay.notes."""
+        store = {
+            "tripPlan": {
+                "title": "Test Trip",
+                "itinerary": {
+                    "sections": [
+                        {
+                            "mode": "dayPlan",
+                            "date": "2026-01-01",
+                            "blocks": [
+                                {
+                                    "type": "text",
+                                    "text": {"ops": [{"insert": "Remember to pack sunscreen\n"}]},
+                                },
+                                {
+                                    "type": "place",
+                                    "place": {
+                                        "name": "Beach",
+                                        "place_id": "beach_id",
+                                        "geometry": {"location": {"lat": 10.0, "lng": 20.0}},
+                                    },
+                                    "startTime": "09:00",
+                                    "text": {},
+                                },
+                                {
+                                    "type": "text",
+                                    "text": {"ops": [{"insert": "Bring extra water\n"}]},
+                                },
+                            ],
+                        }
+                    ],
+                },
+            },
+            "resources": {"placeMetadata": [], "distancesBetweenPlaces": {}},
+        }
+        trip = _parse_itinerary_response("test", store)
+        assert len(trip.days) == 1
+        assert trip.days[0].notes == "Remember to pack sunscreen\nBring extra water"
+        assert len(trip.days[0].items) == 1
+
+    def test_no_text_blocks_empty_notes(self):
+        """Day with only place blocks has empty notes."""
+        trip = _parse_itinerary_response("test", SAMPLE_TRIP_STORE)
+        for day in trip.days:
+            assert day.notes == ""
+
+    def test_place_description_extracted(self):
+        """Place with opening_hours gets a description filtered to that day."""
+        store = {
+            "tripPlan": {
+                "title": "Test Trip",
+                "itinerary": {
+                    "sections": [
+                        {
+                            "mode": "dayPlan",
+                            "date": "2026-01-05",
+                            "blocks": [
+                                {
+                                    "type": "place",
+                                    "place": {
+                                        "name": "Museum",
+                                        "place_id": "museum_id",
+                                        "geometry": {"location": {"lat": 10.0, "lng": 20.0}},
+                                        "opening_hours": {
+                                            "weekday_text": [
+                                                "Monday: 10 AM\u20135 PM",
+                                                "Tuesday: 10 AM\u20135 PM",
+                                                "Wednesday: 10 AM\u20135 PM",
+                                                "Thursday: 10 AM\u20135 PM",
+                                                "Friday: 10 AM\u20138 PM",
+                                                "Saturday: 11 AM\u20136 PM",
+                                                "Sunday: Closed",
+                                            ]
+                                        },
+                                        "rating": 4.6,
+                                        "user_ratings_total": 3000,
+                                    },
+                                    "startTime": "10:00",
+                                    "text": {},
+                                },
+                            ],
+                        }
+                    ],
+                },
+            },
+            "resources": {"placeMetadata": [], "distancesBetweenPlaces": {}},
+        }
+        trip = _parse_itinerary_response("test", store)
+        item = trip.days[0].items[0]
+        # 2026-01-05 is a Monday
+        assert item.description == "Monday: 10 AM\u20135 PM"
+        assert "4.6" not in item.description
