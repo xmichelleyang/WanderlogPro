@@ -1289,7 +1289,7 @@ class TestDayCarousel:
     def test_nudge_js_adds_and_removes_class(self):
         html = generate_guide_html(self._guide())
         assert "classList.add('carousel-nudge')" in html
-        assert "classList.remove('carousel-nudge')" in html
+        assert "animationiteration" in html
 
     def test_nudge_stops_after_timeout(self):
         html = generate_guide_html(self._guide())

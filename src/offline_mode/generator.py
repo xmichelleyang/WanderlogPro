@@ -824,10 +824,16 @@ def _js() -> str:
   // Gentle nudge hint — animate carousel for up to 5s or until user interacts
   if (carousel && pills.length > 1) {
     carousel.classList.add('carousel-nudge');
+    var nudgeStopping = false;
     var stopNudge = function() {
-      carousel.classList.remove('carousel-nudge');
+      if (nudgeStopping) return;
+      nudgeStopping = true;
       carousel.removeEventListener('scroll', stopNudge);
       carousel.removeEventListener('touchstart', stopNudge);
+      // Wait for current cycle to finish at start position, then remove
+      carousel.addEventListener('animationiteration', function() {
+        carousel.classList.remove('carousel-nudge');
+      }, { once: true });
     };
     carousel.addEventListener('scroll', stopNudge, { passive: true });
     carousel.addEventListener('touchstart', stopNudge, { passive: true });
