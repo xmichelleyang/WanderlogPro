@@ -1280,3 +1280,17 @@ class TestDayCarousel:
         last_panel = body.rfind('class="day-panel"')
         dur_key_pos = body.index('duration-key')
         assert dur_key_pos > last_panel
+
+    def test_nudge_animation_css(self):
+        html = generate_guide_html(self._guide())
+        assert 'carouselNudge' in html
+        assert 'carousel-nudge' in html
+
+    def test_nudge_js_adds_and_removes_class(self):
+        html = generate_guide_html(self._guide())
+        assert "classList.add('carousel-nudge')" in html
+        assert "classList.remove('carousel-nudge')" in html
+
+    def test_nudge_stops_after_timeout(self):
+        html = generate_guide_html(self._guide())
+        assert 'setTimeout(stopNudge, 5000)' in html

@@ -672,6 +672,13 @@ body.dark .footer { color: #a8a29e; }
   0%, 100% { transform: translateY(0); }
   50% { transform: translateY(-10px); }
 }
+@keyframes carouselNudge {
+  0%, 100% { transform: translateX(0); }
+  50% { transform: translateX(-30px); }
+}
+.carousel-nudge {
+  animation: carouselNudge 2s ease-in-out infinite;
+}
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
@@ -767,18 +774,18 @@ def _js() -> str:
     });
   });
 
-  // Carousel scroll → update active pill (scroll spy)
-  var scrollTimeout;
+  // Carousel scroll → update active pill (live during swipe)
+  var lastActiveIdx = -1;
   if (carousel) {
     carousel.addEventListener('scroll', function() {
-      clearTimeout(scrollTimeout);
-      scrollTimeout = setTimeout(function() {
-        var w = carousel.clientWidth;
-        if (w <= 0) return;
-        var idx = Math.round(carousel.scrollLeft / w);
+      var w = carousel.clientWidth;
+      if (w <= 0) return;
+      var idx = Math.round(carousel.scrollLeft / w);
+      if (idx !== lastActiveIdx) {
+        lastActiveIdx = idx;
         setActivePill(idx);
-      }, 60);
-    });
+      }
+    }, { passive: true });
   }
 
   // Auto-detect today's date and select matching day
@@ -814,6 +821,19 @@ def _js() -> str:
   }
 
   // PWA: inline service worker via Blob
+  // Gentle nudge hint — animate carousel for up to 5s or until user interacts
+  if (carousel && pills.length > 1) {
+    carousel.classList.add('carousel-nudge');
+    var stopNudge = function() {
+      carousel.classList.remove('carousel-nudge');
+      carousel.removeEventListener('scroll', stopNudge);
+      carousel.removeEventListener('touchstart', stopNudge);
+    };
+    carousel.addEventListener('scroll', stopNudge, { passive: true });
+    carousel.addEventListener('touchstart', stopNudge, { passive: true });
+    setTimeout(stopNudge, 5000);
+  }
+
   if ('serviceWorker' in navigator) {
     var swCode = "self.addEventListener('install', function(e) { e.waitUntil(caches.open('wanderlog-v1').then(function(c) { return c.add(location.href); })); self.skipWaiting(); });" +
       "self.addEventListener('fetch', function(e) { e.respondWith(caches.match(e.request).then(function(r) { return r || fetch(e.request); })); });";
