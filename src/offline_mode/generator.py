@@ -362,7 +362,7 @@ body.dark .tab-pill.active {
   display: flex;
   justify-content: center;
   gap: 4px;
-  padding-bottom: 0.5rem;
+  padding: 0.5rem 0 0.75rem;
 }
 .scroll-dot {
   width: 6px;
