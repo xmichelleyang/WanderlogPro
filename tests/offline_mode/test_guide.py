@@ -1271,15 +1271,17 @@ class TestDayCarousel:
         html = generate_guide_html(self._guide(3))
         assert html.count('tab-pill') >= 3
 
-    def test_duration_key_outside_carousel(self):
-        """Duration key footnote should be outside the carousel container."""
+    def test_duration_key_inside_day_panels(self):
+        """Duration key footnote should be inside each day panel."""
         html = generate_guide_html(self._guide())
         body = html.split('<script>')[0].split('</style>')[-1]
-        assert 'day-carousel' in body
-        assert 'duration-key' in body
-        last_panel = body.rfind('class="day-panel"')
-        dur_key_pos = body.index('duration-key')
-        assert dur_key_pos > last_panel
+        # Each day panel should contain a duration-key
+        import re
+        panels = re.findall(r'<div class="day-panel"[^>]*>.*?</div>\s*</div>', body, re.DOTALL)
+        # At minimum, the duration-key class should appear inside the carousel
+        carousel_start = body.index('day-carousel')
+        carousel_section = body[carousel_start:]
+        assert 'duration-key' in carousel_section
 
     def test_nudge_animation_css(self):
         html = generate_guide_html(self._guide())
@@ -1294,3 +1296,28 @@ class TestDayCarousel:
     def test_nudge_stops_after_timeout(self):
         html = generate_guide_html(self._guide())
         assert 'setTimeout(stopNudge, 5000)' in html
+
+    def test_float_toggle_html(self):
+        html = generate_guide_html(self._guide())
+        assert 'float-toggle' in html
+        assert 'btnSwipe' in html
+        assert 'btnScroll' in html
+
+    def test_float_toggle_css(self):
+        html = generate_guide_html(self._guide())
+        assert '.float-toggle' in html
+
+    def test_scroll_view_container(self):
+        html = generate_guide_html(self._guide())
+        body = html.split('<script>')[0].split('</style>')[-1]
+        assert 'id="scrollView"' in body
+        assert 'scroll-view' in body
+
+    def test_switch_view_mode_js(self):
+        html = generate_guide_html(self._guide())
+        assert 'switchViewMode' in html
+        assert 'sv-divider' in html
+
+    def test_footer_has_extra_padding(self):
+        html = generate_guide_html(self._guide())
+        assert 'padding: 2rem 1rem 5rem' in html

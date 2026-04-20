@@ -638,7 +638,7 @@ body.dark .theme-toggle { background: rgba(30,41,59,0.8); }
 /* Footer */
 .footer {
   text-align: center;
-  padding: 2rem 1rem;
+  padding: 2rem 1rem 5rem;
   font-size: 0.8rem;
   color: var(--muted);
 }
@@ -650,6 +650,51 @@ body.dark .footer { color: #a8a29e; }
   background-clip: text;
   font-weight: 700;
 }
+
+/* Floating view toggle */
+.float-toggle {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 300;
+  display: flex;
+  gap: 2px;
+  padding: 4px;
+  background: rgba(255,255,255,0.95);
+  border-radius: 2rem;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.15);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+body.dark .float-toggle { background: rgba(30,41,59,0.95); }
+.float-toggle button {
+  border: none;
+  border-radius: 2rem;
+  padding: 0.45rem 0.85rem;
+  font-size: 0.68rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: var(--font-body);
+  background: transparent;
+  color: var(--muted);
+  transition: all 200ms ease;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.float-toggle button.active { background: var(--primary); color: white; }
+.float-toggle button svg { width: 13px; height: 13px; }
+
+/* Scroll view (continuous scroll mode) */
+.scroll-view { display: none; padding: 0 0.75rem 1rem; }
+.scroll-view.active { display: block; }
+.sv-divider { padding: 1rem 0 0.5rem; display: flex; align-items: center; gap: 0.5rem; }
+.sv-label { font-weight: 700; font-size: 0.92rem; color: var(--primary); }
+body.dark .sv-label { color: #a5b4fc; }
+.sv-date { font-size: 0.68rem; color: var(--muted); }
+.sv-line { flex: 1; height: 1px; background: linear-gradient(to right, rgba(67,56,202,0.15), transparent); }
+body.dark .sv-line { background: linear-gradient(to right, rgba(99,102,241,0.2), transparent); }
 
 /* Empty state */
 .empty-state {
@@ -839,6 +884,58 @@ def _js() -> str:
     carousel.addEventListener('touchstart', stopNudge, { passive: true });
     setTimeout(stopNudge, 5000);
   }
+
+  // View mode toggle (carousel vs scroll)
+  var scrollView = document.getElementById('scrollView');
+  var viewMode = 'carousel';
+
+  if (carousel && scrollView && pills.length > 1) {
+    // Build scroll view content from day panels
+    var panels = carousel.querySelectorAll('.day-panel');
+    panels.forEach(function(panel, i) {
+      var dayLabel = pills[i] ? pills[i].querySelector('.day-label').textContent : 'Day ' + (i+1);
+      var dayDate = pills[i] ? pills[i].querySelector('.day-date').textContent : '';
+      var section = document.createElement('div');
+      section.className = 'day-scroll-section';
+      section.dataset.scrollDay = String(i);
+      section.innerHTML = '<div class="sv-divider"><span class="sv-label">\U0001f4cd ' + dayLabel
+        + '</span><span class="sv-date">' + dayDate
+        + '</span><div class="sv-line"></div></div>' + panel.innerHTML;
+      scrollView.appendChild(section);
+    });
+
+    // Scroll spy — update active pill in scroll mode
+    window.addEventListener('scroll', function() {
+      if (viewMode !== 'scroll') return;
+      var sections = scrollView.querySelectorAll('.day-scroll-section');
+      var scrollTop = window.scrollY + 120;
+      var activeIdx = 0;
+      sections.forEach(function(sec, i) {
+        if (sec.getBoundingClientRect().top + window.scrollY <= scrollTop) activeIdx = i;
+      });
+      setActivePill(activeIdx);
+    });
+
+    // Override pill click for scroll mode
+    pills.forEach(function(pill, i) {
+      pill.addEventListener('click', function() {
+        if (viewMode === 'scroll') {
+          var sec = scrollView.querySelectorAll('.day-scroll-section')[parseInt(pill.dataset.day, 10)];
+          if (sec) sec.scrollIntoView({ behavior: 'smooth' });
+        }
+      });
+    });
+  }
+
+  window.switchViewMode = function(mode) {
+    viewMode = mode;
+    var btnSwipe = document.getElementById('btnSwipe');
+    var btnScroll = document.getElementById('btnScroll');
+    if (btnSwipe) btnSwipe.classList.toggle('active', mode === 'carousel');
+    if (btnScroll) btnScroll.classList.toggle('active', mode === 'scroll');
+    if (carousel) carousel.style.display = mode === 'carousel' ? 'flex' : 'none';
+    if (scrollView) scrollView.classList.toggle('active', mode === 'scroll');
+  };
 
   if ('serviceWorker' in navigator) {
     var swCode = "self.addEventListener('install', function(e) { e.waitUntil(caches.open('wanderlog-v1').then(function(c) { return c.add(location.href); })); self.skipWaiting(); });" +
@@ -1334,6 +1431,14 @@ def _render_day(day: GuideDay, day_idx: int, total_days: int,
         parts.append("".join(place_parts))
     if not parts:
         parts.append('<div class="empty-state"><div class="emoji">\U0001fae5</div><p>No events added for this date.</p></div>')
+    # Duration key at bottom of each day panel
+    parts.append(
+        '<div class="duration-key">'
+        '<span class="dk-pill dk-gray">25m</span> = estimated avg visit'
+        ' &nbsp;\u00B7&nbsp; '
+        '<span class="dk-pill dk-colored">50m</span> = exact scheduled time'
+        '</div>'
+    )
     return f'<div class="day-panel" data-day="{day_idx}">{"".join(parts)}</div>'
 
 
@@ -1438,14 +1543,6 @@ def generate_guide_html(guide: Guide) -> str:
         )
         day_count = len(guide.days)
         day_word = "day" if day_count == 1 else "days"
-        # Duration key footnote
-        dur_key = (
-            '<div class="duration-key">'
-            '<span class="dk-pill dk-gray">25m</span> = estimated avg visit'
-            ' &nbsp;\u00B7&nbsp; '
-            '<span class="dk-pill dk-colored">50m</span> = exact scheduled time'
-            '</div>'
-        )
         itinerary_content = (
             f'<div class="sec-header">'
             f'<h2>\U0001f4cd Itinerary</h2>'
@@ -1453,7 +1550,7 @@ def generate_guide_html(guide: Guide) -> str:
             f'</div>'
             f'{tabs_html}'
             f'<div class="day-carousel">{days_html}</div>'
-            f'{dur_key}'
+            f'<div class="scroll-view" id="scrollView"></div>'
         )
     else:
         itinerary_content = (
@@ -1508,6 +1605,16 @@ def generate_guide_html(guide: Guide) -> str:
   <footer class="footer">
     \u2728 Generated by <span class="brand">WanderlogPro</span>
   </footer>
+</div>
+<div class="float-toggle" id="floatToggle">
+  <button class="active" id="btnSwipe" onclick="switchViewMode('carousel')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><rect x="2" y="4" width="8" height="16" rx="2"/><rect x="13" y="4" width="8" height="16" rx="2" opacity="0.3"/></svg>
+    Swipe
+  </button>
+  <button id="btnScroll" onclick="switchViewMode('scroll')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><rect x="3" y="2" width="18" height="6" rx="1.5"/><rect x="3" y="10" width="18" height="6" rx="1.5" opacity="0.5"/><rect x="3" y="18" width="18" height="6" rx="1.5" opacity="0.25"/></svg>
+    Scroll
+  </button>
 </div>
 <script>
 {_js()}
