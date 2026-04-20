@@ -658,7 +658,7 @@ body.dark .duration-badge { background: rgba(67,56,202,0.2); color: #a5b4fc; }
 /* Dark mode toggle */
 .theme-toggle {
   position: fixed;
-  top: calc(env(safe-area-inset-top, 0px) + 1.1rem);
+  bottom: calc(env(safe-area-inset-bottom, 0px) + 1.1rem);
   right: calc(env(safe-area-inset-right, 0px) + 1.1rem);
   z-index: 300;
   width: 44px;
@@ -1052,6 +1052,13 @@ def _js() -> str:
     if (btnScroll) btnScroll.classList.toggle('active', mode === 'scroll');
     if (carousel) carousel.style.display = mode === 'carousel' ? 'flex' : 'none';
     if (scrollView) scrollView.classList.toggle('active', mode === 'scroll');
+    if (mode === 'carousel' && carousel) {
+      // Scroll carousel to the currently active pill and update height
+      var activeIdx = 0;
+      pills.forEach(function(p, i) { if (p.classList.contains('active')) activeIdx = i; });
+      scrollCarouselTo(activeIdx, false);
+      setTimeout(updateCarouselHeight, 50);
+    }
   };
 
   if ('serviceWorker' in navigator) {
