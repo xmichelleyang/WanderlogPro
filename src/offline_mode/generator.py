@@ -999,20 +999,39 @@ def _js() -> str:
       scrollView.appendChild(section);
     });
 
-    // Scroll spy — update active pill in scroll mode (debounced)
-    var scrollSpyTimer = null;
+    // Scroll spy — update active pill in scroll mode (live, rAF-throttled)
+    var lastSpyIdx = -1;
+    var spyTicking = false;
+    var cachedSections = null;
     window.addEventListener('scroll', function() {
       if (viewMode !== 'scroll' || scrollPillClick) return;
-      if (scrollSpyTimer) clearTimeout(scrollSpyTimer);
-      scrollSpyTimer = setTimeout(function() {
-        var sections = scrollView.querySelectorAll('.day-scroll-section');
-        var stickyOffset = (secTabsEl ? secTabsEl.offsetHeight : 0) + (tabBarGroup ? tabBarGroup.offsetHeight : 0) + 20;
-        var activeIdx = 0;
-        sections.forEach(function(sec, i) {
-          if (sec.getBoundingClientRect().top < stickyOffset + 10) activeIdx = i;
+      if (!spyTicking) {
+        spyTicking = true;
+        requestAnimationFrame(function() {
+          if (!cachedSections) cachedSections = scrollView.querySelectorAll('.day-scroll-section');
+          var stickyOffset = (secTabsEl ? secTabsEl.offsetHeight : 0) + (tabBarGroup ? tabBarGroup.offsetHeight : 0) + 20;
+          var activeIdx = 0;
+          for (var i = 0; i < cachedSections.length; i++) {
+            if (cachedSections[i].getBoundingClientRect().top < stickyOffset + 10) activeIdx = i;
+          }
+          if (activeIdx !== lastSpyIdx) {
+            lastSpyIdx = activeIdx;
+            pills.forEach(function(p) { p.classList.remove('active'); });
+            if (pills[activeIdx]) {
+              pills[activeIdx].classList.add('active');
+              if (tabBar) {
+                var pill = pills[activeIdx];
+                var barRect = tabBar.getBoundingClientRect();
+                var pillRect = pill.getBoundingClientRect();
+                if (pillRect.left < barRect.left || pillRect.right > barRect.right) {
+                  tabBar.scrollLeft += pillRect.left - barRect.left - barRect.width / 2 + pillRect.width / 2;
+                }
+              }
+            }
+          }
+          spyTicking = false;
         });
-        setActivePill(activeIdx);
-      }, 50);
+      }
     }, { passive: true });
 
   }
