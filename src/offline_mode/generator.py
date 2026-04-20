@@ -84,18 +84,18 @@ body.dark .micro-label { color: #a8a29e; }
   text-align: center;
   padding: 3rem 1rem 2rem;
   background:
-    radial-gradient(ellipse at 20% 50%, rgba(67,56,202,0.15) 0%, transparent 50%),
-    radial-gradient(ellipse at 80% 20%, rgba(245,158,11,0.12) 0%, transparent 50%),
-    radial-gradient(ellipse at 50% 80%, rgba(249,115,22,0.10) 0%, transparent 50%);
+    radial-gradient(ellipse at 20% 50%, rgba(67,56,202,0.22) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 20%, rgba(245,158,11,0.18) 0%, transparent 50%),
+    radial-gradient(ellipse at 50% 80%, rgba(249,115,22,0.15) 0%, transparent 50%);
   border-radius: var(--radius);
   margin-bottom: 1.5rem;
   animation: heroIn 0.8s var(--spring) both;
 }
 body.dark .hero {
   background:
-    radial-gradient(ellipse at 20% 50%, rgba(67,56,202,0.25) 0%, transparent 50%),
-    radial-gradient(ellipse at 80% 20%, rgba(245,158,11,0.18) 0%, transparent 50%),
-    radial-gradient(ellipse at 50% 80%, rgba(249,115,22,0.15) 0%, transparent 50%);
+    radial-gradient(ellipse at 20% 50%, rgba(67,56,202,0.32) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 20%, rgba(245,158,11,0.25) 0%, transparent 50%),
+    radial-gradient(ellipse at 50% 80%, rgba(249,115,22,0.20) 0%, transparent 50%);
 }
 .hero h1 { font-size: 2rem; margin-bottom: 0.5rem; }
 .hero .subtitle { color: var(--muted); font-size: 0.9rem; }
@@ -121,9 +121,7 @@ body.dark .glass-card {
 /* ====== Section Tabs (Option C rounded bar + V2 ambient glow) ====== */
 .sec-tabs {
   display: flex;
-  background: rgba(255,255,255,0.85);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  background: rgba(255,255,255,0.93);
   border-radius: 0.75rem;
   overflow: hidden;
   box-shadow: 0 1px 4px rgba(0,0,0,0.06);
@@ -133,7 +131,7 @@ body.dark .glass-card {
   z-index: 20;
 }
 body.dark .sec-tabs {
-  background: rgba(15,23,42,0.85);
+  background: rgba(15,23,42,0.93);
   box-shadow: 0 1px 4px rgba(0,0,0,0.2);
 }
 .sec-tab {
@@ -306,21 +304,62 @@ body.dark .bp-conf-code { color: var(--text-dark); }
 
 /* Day-view flight card in itinerary (always expanded, no interaction) */
 .bp-card.bp-day-card .bp-header { cursor: default; }
+.bp-card.bp-day-card {
+  position: relative;
+}
+/* Ticket notch on the right edge */
+.bp-card.bp-day-card::before {
+  content: '';
+  position: absolute;
+  right: -8px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--surface-light);
+  z-index: 2;
+}
+body.dark .bp-card.bp-day-card::before {
+  background: var(--surface-dark);
+}
+.bp-card.bp-day-card::after {
+  content: '';
+  position: absolute;
+  left: -8px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--surface-light);
+  z-index: 2;
+}
+body.dark .bp-card.bp-day-card::after {
+  background: var(--surface-dark);
+}
 
-/* Tabs — sticky within itinerary panel */
+/* Tab-bar group — sticky wrapper for pills + dots */
+.tab-bar-group {
+  position: sticky;
+  top: var(--tab-bar-top, 0px);
+  z-index: 19;
+  background: rgba(255,251,245,0.93);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+body.dark .tab-bar-group {
+  background: rgba(15,23,42,0.82);
+}
+
+/* Tabs — pill row inside group */
 .tab-bar {
   display: flex;
   gap: 0.5rem;
   overflow-x: auto;
-  padding: 0.5rem 0.75rem;
+  padding: 0.75rem 0.75rem 0.5rem;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
-  position: sticky;
-  top: 0;
-  z-index: 20;
-  background: rgba(255,251,245,0.92);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
 }
 .tab-bar.centered {
   justify-content: center;
@@ -344,7 +383,6 @@ body.dark .bp-conf-code { color: var(--text-dark); }
   transition: all 300ms var(--spring);
 }
 body.dark .tab-pill { background: rgba(255,255,255,0.08); color: var(--text-dark); }
-body.dark .tab-bar { background: rgba(30,30,30,0.92); }
 .tab-pill.active {
   background: linear-gradient(135deg, var(--primary), var(--accent-hot));
   color: #fff;
@@ -385,9 +423,11 @@ body.dark .scroll-dot.dot-active {
 .day-carousel {
   display: flex;
   overflow-x: auto;
+  overflow-y: clip;
   scroll-snap-type: x mandatory;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
+  transition: height 0.3s ease;
 }
 .day-carousel::-webkit-scrollbar { display: none; }
 
@@ -396,7 +436,6 @@ body.dark .scroll-dot.dot-active {
   min-width: 100%;
   flex: 0 0 100%;
   scroll-snap-align: start;
-  overflow-y: auto;
   padding: 0 0.75rem;
   box-sizing: border-box;
 }
@@ -689,6 +728,7 @@ body.dark .float-toggle { background: rgba(30,41,59,0.95); }
 /* Scroll view (continuous scroll mode) */
 .scroll-view { display: none; padding: 0 0.75rem 1rem; }
 .scroll-view.active { display: block; }
+.day-scroll-section { scroll-margin-top: 120px; }
 .sv-divider { padding: 1rem 0 0.5rem; display: flex; align-items: center; gap: 0.5rem; }
 .sv-label { font-weight: 700; font-size: 1.15rem; color: var(--primary); }
 body.dark .sv-label { color: #a5b4fc; }
@@ -795,6 +835,38 @@ def _js() -> str:
   var pills = document.querySelectorAll('.tab-pill');
   var carousel = document.querySelector('.day-carousel');
   var tabBar = document.querySelector('.tab-bar');
+  var secTabsEl = document.querySelector('.sec-tabs');
+  var tabBarGroup = document.querySelector('.tab-bar-group');
+
+  // Position .tab-bar-group below .sec-tabs so pills don't hide behind it
+  function updateTabBarOffset() {
+    if (secTabsEl && tabBarGroup) {
+      var h = secTabsEl.offsetHeight;
+      tabBarGroup.style.setProperty('--tab-bar-top', h + 'px');
+      // Update scroll-margin for scroll-mode sections
+      var totalSticky = h + tabBarGroup.offsetHeight;
+      document.querySelectorAll('.day-scroll-section').forEach(function(sec) {
+        sec.style.scrollMarginTop = totalSticky + 'px';
+      });
+    }
+  }
+  updateTabBarOffset();
+  window.addEventListener('resize', updateTabBarOffset);
+
+  // Dynamically size carousel to the active panel to avoid bottom gap
+  function updateCarouselHeight() {
+    if (!carousel) return;
+    var panels = carousel.querySelectorAll('.day-panel');
+    var w = carousel.clientWidth;
+    var idx = w > 0 ? Math.round(carousel.scrollLeft / w) : 0;
+    if (panels[idx]) {
+      carousel.style.height = panels[idx].scrollHeight + 'px';
+    }
+  }
+  if (carousel) {
+    updateCarouselHeight();
+    window.addEventListener('resize', updateCarouselHeight);
+  }
 
   function scrollToActivePill(pill) {
     if (tabBar && pill) {
@@ -816,12 +888,26 @@ def _js() -> str:
     carousel.scrollTo({ left: idx * w, behavior: smooth ? 'smooth' : 'auto' });
   }
 
-  // Pill click → scroll carousel
+  // Pill click → scroll carousel or jump in scroll mode
+  var scrollPillClick = false;
   pills.forEach(function(pill, i) {
     pill.addEventListener('click', function() {
       var idx = parseInt(pill.dataset.day, 10);
       setActivePill(idx);
-      scrollCarouselTo(idx, true);
+      if (viewMode === 'scroll') {
+        scrollPillClick = true;
+        var scrollViewEl = document.getElementById('scrollView');
+        if (scrollViewEl) {
+          var sec = scrollViewEl.querySelectorAll('.day-scroll-section')[idx];
+          if (sec) {
+            sec.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          }
+        }
+        setTimeout(function() { scrollPillClick = false; }, 1000);
+      } else {
+        scrollCarouselTo(idx, true);
+        setTimeout(updateCarouselHeight, 350);
+      }
     });
   });
 
@@ -835,6 +921,7 @@ def _js() -> str:
       if (idx !== lastActiveIdx) {
         lastActiveIdx = idx;
         setActivePill(idx);
+        updateCarouselHeight();
       }
     }, { passive: true });
   }
@@ -850,11 +937,13 @@ def _js() -> str:
   if (matchedIdx >= 0) {
     setActivePill(matchedIdx);
     scrollCarouselTo(matchedIdx, false);
+    updateCarouselHeight();
   } else {
     // No date match — Day 1, ensure scrolled to the left
     setActivePill(0);
     if (tabBar) tabBar.scrollLeft = 0;
     if (carousel) carousel.scrollLeft = 0;
+    updateCarouselHeight();
   }
 
   // Scroll progress dots
@@ -910,27 +999,22 @@ def _js() -> str:
       scrollView.appendChild(section);
     });
 
-    // Scroll spy — update active pill in scroll mode
+    // Scroll spy — update active pill in scroll mode (debounced)
+    var scrollSpyTimer = null;
     window.addEventListener('scroll', function() {
-      if (viewMode !== 'scroll') return;
-      var sections = scrollView.querySelectorAll('.day-scroll-section');
-      var scrollTop = window.scrollY + 120;
-      var activeIdx = 0;
-      sections.forEach(function(sec, i) {
-        if (sec.getBoundingClientRect().top + window.scrollY <= scrollTop) activeIdx = i;
-      });
-      setActivePill(activeIdx);
-    });
+      if (viewMode !== 'scroll' || scrollPillClick) return;
+      if (scrollSpyTimer) clearTimeout(scrollSpyTimer);
+      scrollSpyTimer = setTimeout(function() {
+        var sections = scrollView.querySelectorAll('.day-scroll-section');
+        var stickyOffset = (secTabsEl ? secTabsEl.offsetHeight : 0) + (tabBarGroup ? tabBarGroup.offsetHeight : 0) + 20;
+        var activeIdx = 0;
+        sections.forEach(function(sec, i) {
+          if (sec.getBoundingClientRect().top < stickyOffset + 10) activeIdx = i;
+        });
+        setActivePill(activeIdx);
+      }, 50);
+    }, { passive: true });
 
-    // Override pill click for scroll mode
-    pills.forEach(function(pill, i) {
-      pill.addEventListener('click', function() {
-        if (viewMode === 'scroll') {
-          var sec = scrollView.querySelectorAll('.day-scroll-section')[parseInt(pill.dataset.day, 10)];
-          if (sec) sec.scrollIntoView({ behavior: 'smooth' });
-        }
-      });
-    });
   }
 
   window.switchViewMode = function(mode) {
@@ -1318,7 +1402,7 @@ def _render_flight_card(flight: GuideFlight) -> str:
     return (
         f'<div class="bp-card bp-day-card" style="margin-bottom:0.6rem;">'
         f'<div class="bp-header">'
-        f'<div><div class="bp-route">{route}</div>{airline_html}</div>'
+        f'<div><div class="bp-route">\u2708\uFE0F {route}</div>{airline_html}</div>'
         f'</div>'
         f'<div class="bp-body">'
         f'<div class="bp-columns">'
@@ -1381,7 +1465,7 @@ def _render_hotel_day_card(hotel: GuideHotel) -> str:
     return (
         f'<div class="bp-card bp-hotel bp-day-card" style="margin-bottom:0.6rem;">'
         f'<div class="bp-header">'
-        f'<div><div class="bp-route">{_esc(hotel.name)}</div>{nights_html}</div>'
+        f'<div><div class="bp-route">\U0001f3e8 {_esc(hotel.name)}</div>{nights_html}</div>'
         f'</div>'
         f'<div class="bp-body">'
         f'<div class="bp-columns">'
@@ -1492,7 +1576,12 @@ def _render_tabs(guide: Guide) -> str:
             )
             + '</div>'
         )
-    return f'<div class="tab-bar{centered_class}">{"".join(pills)}</div>{dots}'
+    return (
+        f'<div class="tab-bar-group">'
+        f'<div class="tab-bar{centered_class}">{"".join(pills)}</div>'
+        f'{dots}'
+        f'</div>'
+    )
 
 
 def _date_range(guide: Guide) -> str:
