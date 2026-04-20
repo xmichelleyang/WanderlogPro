@@ -249,10 +249,6 @@ class TestGenerateGuideHtml:
         html = generate_guide_html(_sample_guide())
         assert "8:00 AM" in html
 
-    def test_contains_timezone(self):
-        html = generate_guide_html(_sample_guide())
-        assert "Asia/Ho_Chi_Minh" in html
-
     def test_has_dark_mode_toggle(self):
         html = generate_guide_html(_sample_guide())
         assert "theme-toggle" in html

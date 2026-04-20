@@ -88,18 +88,20 @@ body.dark .micro-label { color: #a8a29e; }
   text-align: center;
   padding: 3rem 1rem 2rem;
   background:
-    radial-gradient(ellipse at 20% 50%, rgba(67,56,202,0.22) 0%, transparent 50%),
-    radial-gradient(ellipse at 80% 20%, rgba(245,158,11,0.18) 0%, transparent 50%),
-    radial-gradient(ellipse at 50% 80%, rgba(249,115,22,0.15) 0%, transparent 50%);
+    radial-gradient(ellipse 120% 80% at 15% 30%, rgba(67,56,202,0.40) 0%, transparent 60%),
+    radial-gradient(ellipse 100% 90% at 85% 20%, rgba(99,102,241,0.35) 0%, transparent 55%),
+    radial-gradient(ellipse 90% 100% at 50% 90%, rgba(249,115,22,0.32) 0%, transparent 55%),
+    radial-gradient(circle at 50% 50%, rgba(245,158,11,0.18) 0%, transparent 70%);
   border-radius: var(--radius);
   margin-bottom: 1.5rem;
   animation: heroIn 0.8s var(--spring) both;
 }
 body.dark .hero {
   background:
-    radial-gradient(ellipse at 20% 50%, rgba(67,56,202,0.32) 0%, transparent 50%),
-    radial-gradient(ellipse at 80% 20%, rgba(245,158,11,0.25) 0%, transparent 50%),
-    radial-gradient(ellipse at 50% 80%, rgba(249,115,22,0.20) 0%, transparent 50%);
+    radial-gradient(ellipse 120% 80% at 15% 30%, rgba(67,56,202,0.55) 0%, transparent 60%),
+    radial-gradient(ellipse 100% 90% at 85% 20%, rgba(99,102,241,0.45) 0%, transparent 55%),
+    radial-gradient(ellipse 90% 100% at 50% 90%, rgba(249,115,22,0.40) 0%, transparent 55%),
+    radial-gradient(circle at 50% 50%, rgba(245,158,11,0.25) 0%, transparent 70%);
 }
 .hero h1 { font-size: 2rem; margin-bottom: 0.5rem; }
 .hero .subtitle { color: var(--muted); font-size: 0.9rem; }
@@ -253,7 +255,7 @@ body.dark .bp-card {
 .bp-body {
   background: white;
 }
-body.dark .bp-body { background: rgba(15,23,42,0.9); }
+body.dark .bp-body { background: #1E293B; }
 .bp-columns {
   display: flex;
   padding: 0.85rem 1rem;
@@ -828,8 +830,15 @@ def _js() -> str:
     // Show swipe/scroll toggle only on itinerary
     var ft = document.getElementById('floatToggle');
     if (ft) ft.style.display = target === 'itinerary' ? 'flex' : 'none';
-    if (target !== 'itinerary' && typeof switchViewMode === 'function') {
-      switchViewMode('carousel');
+    if (target === 'itinerary') {
+      // Re-sync the current view mode when returning to itinerary
+      if (typeof switchViewMode === 'function') {
+        switchViewMode(viewMode);
+      }
+    } else {
+      if (typeof switchViewMode === 'function') {
+        switchViewMode('carousel');
+      }
     }
   }
 
@@ -1052,12 +1061,21 @@ def _js() -> str:
     if (btnScroll) btnScroll.classList.toggle('active', mode === 'scroll');
     if (carousel) carousel.style.display = mode === 'carousel' ? 'flex' : 'none';
     if (scrollView) scrollView.classList.toggle('active', mode === 'scroll');
-    if (mode === 'carousel' && carousel) {
-      // Scroll carousel to the currently active pill and update height
-      var activeIdx = 0;
-      pills.forEach(function(p, i) { if (p.classList.contains('active')) activeIdx = i; });
-      scrollCarouselTo(activeIdx, false);
-      setTimeout(updateCarouselHeight, 50);
+    var activeIdx = 0;
+    pills.forEach(function(p, i) { if (p.classList.contains('active')) activeIdx = i; });
+    if (mode === 'carousel') {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      if (carousel) {
+        scrollCarouselTo(activeIdx, false);
+        setTimeout(updateCarouselHeight, 50);
+      }
+    } else if (mode === 'scroll' && scrollView) {
+      var sec = scrollView.querySelectorAll('.day-scroll-section')[activeIdx];
+      if (sec) {
+        scrollPillClick = true;
+        sec.scrollIntoView({ behavior: 'auto', block: 'start' });
+        setTimeout(function() { scrollPillClick = false; }, 500);
+      }
     }
   };
 
@@ -1554,10 +1572,11 @@ def _render_day(day: GuideDay, day_idx: int, total_days: int,
     if place_parts:
         parts.append("".join(place_parts))
     has_content = bool(parts)
+    has_places = bool(day.places)
     if not parts:
         parts.append('<div class="empty-state"><div class="emoji">\U0001fae5</div><p>No events added for this date.</p></div>')
-    # Duration key at bottom of each day panel (only when there are actual events)
-    if has_content:
+    # Duration key at bottom of each day panel (only when there are place cards)
+    if has_places:
         parts.append(
             '<div class="duration-key">'
             '<span class="dk-pill dk-gray">25m</span> = estimated avg visit'
@@ -1635,6 +1654,29 @@ def _date_range(guide: Guide) -> str:
         return ""
 
 
+def _tz_diff_label(guide: Guide) -> str:
+    """Return e.g. '+14h' or '-3h' relative to the machine's local timezone."""
+    if not guide.timezone or not guide.days:
+        return ""
+    try:
+        from zoneinfo import ZoneInfo
+        ref_date = guide.days[0].date or ""
+        dt = datetime.strptime(ref_date, "%Y-%m-%d") if ref_date else datetime.now()
+        trip_offset = dt.replace(tzinfo=ZoneInfo(guide.timezone)).utcoffset()
+        local_offset = dt.astimezone().utcoffset()
+        if trip_offset is None or local_offset is None:
+            return ""
+        diff_hours = (trip_offset.total_seconds() - local_offset.total_seconds()) / 3600
+        if diff_hours == 0:
+            return ""
+        sign = "+" if diff_hours > 0 else ""
+        if diff_hours == int(diff_hours):
+            return f"{sign}{int(diff_hours)}h"
+        return f"{sign}{diff_hours:.1f}h"
+    except Exception:
+        return ""
+
+
 # ---------------------------------------------------------------------------
 # Public API
 # ---------------------------------------------------------------------------
@@ -1643,11 +1685,8 @@ def _date_range(guide: Guide) -> str:
 def generate_guide_html(guide: Guide) -> str:
     """Generate a self-contained HTML trip guide. Returns HTML string."""
     date_range = _date_range(guide)
-    subtitle_parts = []
-    if date_range:
-        subtitle_parts.append(date_range)
-    if guide.timezone:
-        subtitle_parts.append(_esc(guide.timezone))
+    tz_diff = _tz_diff_label(guide)
+    subtitle_parts = [p for p in (date_range, tz_diff) if p]
     subtitle = " &middot; ".join(subtitle_parts)
 
     # Manifest data URL
