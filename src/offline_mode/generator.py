@@ -55,7 +55,11 @@ body {
   line-height: 1.6;
   min-height: 100dvh;
   padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
-  transition: background 300ms ease, color 300ms ease;
+}
+
+body, body *,
+body *::before, body *::after {
+  transition: background 300ms ease, background-color 300ms ease, color 300ms ease, border-color 300ms ease, box-shadow 300ms ease;
 }
 
 body.dark {
@@ -160,7 +164,7 @@ body.dark .sec-tab.active-hotel { color: #a5b4fc; background: rgba(67,56,202,0.1
 body.dark .sec-tab.active-flight { color: #fb923c; background: rgba(234,88,12,0.12); }
 
 .sec-panel { display: none; }
-.sec-panel.active { display: block; animation: fadeSlideUp 0.3s ease both; }
+.sec-panel.active { display: block; animation: fadePanel 0.3s ease both; }
 
 /* Ambient glow behind content */
 .content-area {
@@ -726,7 +730,7 @@ body.dark .float-toggle { background: rgba(30,41,59,0.95); }
 .float-toggle button svg { width: 13px; height: 13px; }
 
 /* Scroll view (continuous scroll mode) */
-.scroll-view { display: none; padding: 0 0.75rem 1rem; }
+.scroll-view { display: none; padding: 0 0.75rem 1rem; overflow-x: hidden; }
 .scroll-view.active { display: block; }
 .day-scroll-section { scroll-margin-top: 120px; }
 .sv-divider { padding: 1rem 0 0.5rem; display: flex; align-items: center; gap: 0.5rem; }
@@ -752,6 +756,10 @@ body.dark .sv-line { background: linear-gradient(to right, rgba(99,102,241,0.2),
 @keyframes fadeSlideUp {
   from { opacity: 0; transform: translateY(16px); }
   to { opacity: 1; transform: translateY(0); }
+}
+@keyframes fadePanel {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 @keyframes float {
   0%, 100% { transform: translateY(0); }
