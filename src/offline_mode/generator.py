@@ -615,8 +615,8 @@ body.dark .duration-badge { background: rgba(67,56,202,0.2); color: #a5b4fc; }
 /* Dark mode toggle */
 .theme-toggle {
   position: fixed;
-  top: env(safe-area-inset-top, 0.75rem);
-  right: 0.75rem;
+  top: calc(env(safe-area-inset-top, 0px) + 1.1rem);
+  right: calc(env(safe-area-inset-right, 0px) + 1.1rem);
   z-index: 300;
   width: 44px;
   height: 44px;
@@ -690,7 +690,7 @@ body.dark .float-toggle { background: rgba(30,41,59,0.95); }
 .scroll-view { display: none; padding: 0 0.75rem 1rem; }
 .scroll-view.active { display: block; }
 .sv-divider { padding: 1rem 0 0.5rem; display: flex; align-items: center; gap: 0.5rem; }
-.sv-label { font-weight: 700; font-size: 0.92rem; color: var(--primary); }
+.sv-label { font-weight: 700; font-size: 1.15rem; color: var(--primary); }
 body.dark .sv-label { color: #a5b4fc; }
 .sv-date { font-size: 0.68rem; color: var(--muted); }
 .sv-line { flex: 1; height: 1px; background: linear-gradient(to right, rgba(67,56,202,0.15), transparent); }
@@ -699,7 +699,7 @@ body.dark .sv-line { background: linear-gradient(to right, rgba(99,102,241,0.2),
 /* Empty state */
 .empty-state {
   text-align: center;
-  padding: 4rem 1rem;
+  padding: 1.5rem 1rem;
 }
 .empty-state .emoji { font-size: 3rem; animation: float 3s ease-in-out infinite; }
 .empty-state p { color: var(--muted); margin-top: 1rem; }
@@ -776,6 +776,12 @@ def _js() -> str:
     if (targetPanel) targetPanel.classList.add('active');
     if (contentArea) {
       contentArea.className = 'content-area ' + (glowMap[target] || '');
+    }
+    // Show swipe/scroll toggle only on itinerary
+    var ft = document.getElementById('floatToggle');
+    if (ft) ft.style.display = target === 'itinerary' ? 'flex' : 'none';
+    if (target !== 'itinerary' && typeof switchViewMode === 'function') {
+      switchViewMode('carousel');
     }
   }
 
@@ -1429,16 +1435,18 @@ def _render_day(day: GuideDay, day_idx: int, total_days: int,
             place_parts.append(_render_connector(p))
     if place_parts:
         parts.append("".join(place_parts))
+    has_content = bool(parts)
     if not parts:
         parts.append('<div class="empty-state"><div class="emoji">\U0001fae5</div><p>No events added for this date.</p></div>')
-    # Duration key at bottom of each day panel
-    parts.append(
-        '<div class="duration-key">'
-        '<span class="dk-pill dk-gray">25m</span> = estimated avg visit'
-        ' &nbsp;\u00B7&nbsp; '
-        '<span class="dk-pill dk-colored">50m</span> = exact scheduled time'
-        '</div>'
-    )
+    # Duration key at bottom of each day panel (only when there are actual events)
+    if has_content:
+        parts.append(
+            '<div class="duration-key">'
+            '<span class="dk-pill dk-gray">25m</span> = estimated avg visit'
+            ' &nbsp;\u00B7&nbsp; '
+            '<span class="dk-pill dk-colored">50m</span> = exact scheduled time'
+            '</div>'
+        )
     return f'<div class="day-panel" data-day="{day_idx}">{"".join(parts)}</div>'
 
 
