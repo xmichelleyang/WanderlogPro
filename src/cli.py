@@ -290,23 +290,32 @@ def export_all(
 @click.option(
     "--output", "-o",
     default=None,
-    help="Output file path (default: <trip-name>-offline.html).",
+    help="Output file path (default: <trip-name>-offline.html or .apk).",
 )
 @click.option(
     "--cookie", "-c",
     default=None,
     help="Session cookie for private trips (from browser DevTools).",
 )
-def offline_mode(trip_url: str, output: str | None, cookie: str | None) -> None:
+@click.option(
+    "--apk",
+    is_flag=True,
+    default=False,
+    help="Package the offline viewer as an Android APK instead of HTML.",
+)
+def offline_mode(trip_url: str, output: str | None, cookie: str | None, apk: bool) -> None:
     """Generate an offline trip viewer as a self-contained HTML file.
 
     Creates a beautiful mobile-friendly PWA that you can add to your
     phone's home screen. Includes flights, hotels, and day-by-day
     itinerary — no internet required after first open.
+
+    With --apk, packages the viewer as an Android APK (requires JDK
+    and Android SDK command-line tools).
     """
     from wanderlogpro.calendar_export.scraper import fetch_itinerary
     from wanderlogpro.offline_mode.builder import build_guide
-    from wanderlogpro.offline_mode.generator import write_guide
+    from wanderlogpro.offline_mode.generator import generate_guide_html, write_guide
 
     trip_url = _resolve_trip_url(trip_url)
 
@@ -336,28 +345,49 @@ def offline_mode(trip_url: str, output: str | None, cookie: str | None) -> None:
     click.echo("📱 Building offline trip viewer...")
     trip_guide = build_guide(trip)
 
-    # Default output filename from trip name
-    if not output:
-        safe_name = re.sub(r"[^\w\s-]", "", trip.name).strip().replace(" ", "-")[:50]
-        output = f"{safe_name}-offline.html"
+    safe_name = re.sub(r"[^\w\s-]", "", trip.name).strip().replace(" ", "-")[:50]
 
-    path = write_guide(trip_guide, output)
+    if apk:
+        from wanderlogpro.offline_mode.apk_builder import ApkBuildError, build_apk
 
-    flights = len(trip_guide.flights)
-    hotels = len(trip_guide.hotels)
+        if not output:
+            output = f"{safe_name}-offline.apk"
 
-    click.echo(f"✅ Offline trip viewer generated!")
-    click.echo(f"   📄 File: {path}")
-    click.echo(f"   📅 {len(trip_guide.days)} days, {trip_guide.total_places} places")
-    if flights:
-        click.echo(f"   ✈️  {flights} flight(s)")
-    if hotels:
-        click.echo(f"   🏨 {hotels} hotel(s)")
-    click.echo(f"\n   📱 Send to your phone:")
-    click.echo(f"      • Email it to yourself")
-    click.echo(f"      • Upload to Google Drive / OneDrive")
-    click.echo(f"      • Nearby Share (Android)")
-    click.echo(f"      Then open in Chrome → Add to Home Screen")
+        guide_html = generate_guide_html(trip_guide)
+        click.echo("🔨 Building Android APK (this may take a minute)...")
+
+        try:
+            path = build_apk(guide_html, trip.name, output)
+        except ApkBuildError as e:
+            raise click.ClickException(str(e))
+
+        click.echo(f"✅ APK built successfully!")
+        click.echo(f"   📦 File: {path}")
+        click.echo(f"   📅 {len(trip_guide.days)} days, {trip_guide.total_places} places")
+        click.echo(f"\n   📱 Install on your phone:")
+        click.echo(f"      • adb install {path}")
+        click.echo(f"      • Or transfer the APK and open it on your device")
+    else:
+        if not output:
+            output = f"{safe_name}-offline.html"
+
+        path = write_guide(trip_guide, output)
+
+        flights = len(trip_guide.flights)
+        hotels = len(trip_guide.hotels)
+
+        click.echo(f"✅ Offline trip viewer generated!")
+        click.echo(f"   📄 File: {path}")
+        click.echo(f"   📅 {len(trip_guide.days)} days, {trip_guide.total_places} places")
+        if flights:
+            click.echo(f"   ✈️  {flights} flight(s)")
+        if hotels:
+            click.echo(f"   🏨 {hotels} hotel(s)")
+        click.echo(f"\n   📱 Send to your phone:")
+        click.echo(f"      • Email it to yourself")
+        click.echo(f"      • Upload to Google Drive / OneDrive")
+        click.echo(f"      • Nearby Share (Android)")
+        click.echo(f"      Then open in Chrome → Add to Home Screen")
 
 
 if __name__ == "__main__":

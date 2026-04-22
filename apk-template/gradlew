@@ -1,0 +1,28 @@
+#!/bin/sh
+
+#
+# Gradle wrapper start-up script (simplified)
+#
+
+APP_NAME="Gradle"
+APP_BASE_NAME=$(basename "$0")
+DIRNAME=$(cd "$(dirname "$0")" && pwd)
+CLASSPATH="$DIRNAME/gradle/wrapper/gradle-wrapper.jar"
+
+# Determine the Java command to use
+if [ -n "$JAVA_HOME" ]; then
+    JAVACMD="$JAVA_HOME/bin/java"
+else
+    JAVACMD="java"
+fi
+
+# Check java is available
+if ! command -v "$JAVACMD" > /dev/null 2>&1; then
+    echo "ERROR: JAVA_HOME is not set and no 'java' command found in PATH." >&2
+    exit 1
+fi
+
+exec "$JAVACMD" \
+    $JAVA_OPTS \
+    -classpath "$CLASSPATH" \
+    org.gradle.wrapper.GradleWrapperMain "$@"

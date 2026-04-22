@@ -140,6 +140,94 @@ Generates a single self-contained HTML file with:
 - Upload to Google Drive / OneDrive → open on phone
 - Nearby Share (Android)
 
+### Offline mode APK export (Android APK)
+
+You can build a simple Android APK wrapper for the offline-mode PWA using the `--apk` option. This will package the generated offline HTML into the included `apk-template` and invoke a Gradle build to produce an APK suitable for testing on Android devices.
+
+Example:
+
+```bash
+python -m wanderlogpro.cli offline-mode https://wanderlog.com/view/abcd1234/my-trip --apk
+```
+
+Prerequisites:
+
+- **Java JDK 11+** installed and `JAVA_HOME` pointing to the JDK installation.
+- **Android SDK** installed with Platform Tools and at least one Android platform and build-tools. Make sure `ANDROID_HOME` or `ANDROID_SDK_ROOT` is set (or that `sdkmanager`/`adb` are on your PATH).
+- **Gradle wrapper**: this project includes `apk-template/gradlew` and `apk-template/gradlew.bat`; the wrapper will run Gradle for you. On Unix, ensure `apk-template/gradlew` is executable.
+- **Python 3.10+** (see project prerequisites above).
+
+Notes:
+
+- The build process uses the `apk-template` directory in the repo. The generated APK will appear in the normal Android build outputs (for example, under `apk-template/app/build/outputs/apk/`), depending on the build variant.
+- By default this is a debug/test build suitable for installing on a device. For a release-signed APK, provide your own keystore and signing configuration in the `apk-template` Gradle config before running the command.
+- If the build fails, verify your Android SDK installation, accept any required SDK licenses, and ensure the required SDK platforms/build-tools are installed via `sdkmanager`.
+
+Commands — quick checklist
+
+- **Verify Java (JDK 11+)**: confirm Java is installed and `JAVA_HOME` is set.
+
+    Windows (PowerShell):
+
+    ```powershell
+    java -version
+    setx JAVA_HOME "C:\Path\to\jdk"
+    ```
+
+    macOS / Linux:
+
+    ```bash
+    java -version
+    export JAVA_HOME=/path/to/jdk
+    ```
+
+- **Set Android SDK env vars** (adjust paths to your SDK):
+
+    Windows (PowerShell):
+
+    ```powershell
+    setx ANDROID_HOME "%USERPROFILE%\AppData\Local\Android\Sdk"
+    setx ANDROID_SDK_ROOT "%ANDROID_HOME%"
+    ```
+
+    macOS / Linux:
+
+    ```bash
+    export ANDROID_SDK_ROOT=$HOME/Library/Android/sdk
+    export PATH=$ANDROID_SDK_ROOT/cmdline-tools/latest/bin:$ANDROID_SDK_ROOT/platform-tools:$PATH
+    ```
+
+- **Install / accept SDK components** (requires `sdkmanager`):
+
+    ```bash
+    sdkmanager --licenses
+    sdkmanager "platform-tools" "platforms;android-33" "build-tools;33.0.2"
+    ```
+
+- **Run the CLI to generate APK content** (this packages HTML into `apk-template` and triggers Gradle):
+
+    ```bash
+    python -m wanderlogpro.cli offline-mode <TRIP_URL> --apk
+    ```
+
+- **If Gradle wasn't run automatically (or you need to rebuild):**
+
+    Windows (PowerShell):
+
+    ```powershell
+    cd apk-template
+    .\gradlew.bat assembleDebug
+    ```
+
+    macOS / Linux:
+
+    ```bash
+    cd apk-template
+    ./gradlew assembleDebug
+    ```
+
+- **Notes**: for a release-signed APK, add your keystore/signing config to `apk-template/app/build.gradle` before building. If `sdkmanager` or `adb` are not found, add the Android SDK `platform-tools` and `cmdline-tools` to your PATH or point `ANDROID_SDK_ROOT` to the SDK location.
+
 ### Both map + calendar at once
 
 ```bash

@@ -37,6 +37,11 @@ credentials.json
 # Dry-run preview files
 wanderlogpro-preview-*.html
 
+# Android / Gradle
+.gradle/
+*.apk
+local.properties
+
 # OS files
 .DS_Store
 Thumbs.db
