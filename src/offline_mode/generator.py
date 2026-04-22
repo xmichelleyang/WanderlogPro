@@ -2,15 +2,33 @@
 
 from __future__ import annotations
 
+import base64
 import html
 import os
 from datetime import datetime
+from pathlib import Path
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     pass
 
 from wanderlogpro.offline_mode.models import Guide, GuideDay, GuideFlight, GuideHotel, GuidePlace
+
+
+_ICON_PATH = Path(__file__).resolve().parent.parent.parent / "assets" / "icon.png"
+_ICON_DATA_URL: str | None = None
+
+
+def _icon_data_url() -> str | None:
+    """Return the apple-touch-icon as a base64 data URL, or None if missing."""
+    global _ICON_DATA_URL
+    if _ICON_DATA_URL is None:
+        try:
+            data = _ICON_PATH.read_bytes()
+            _ICON_DATA_URL = f"data:image/png;base64,{base64.b64encode(data).decode()}"
+        except OSError:
+            _ICON_DATA_URL = ""
+    return _ICON_DATA_URL or None
 
 
 # ---------------------------------------------------------------------------
@@ -1692,6 +1710,11 @@ def generate_guide_html(guide: Guide) -> str:
     # Manifest data URL
     import json
     import base64
+    icon_data_url = _icon_data_url()
+    manifest_icons = (
+        [{"src": icon_data_url, "sizes": "180x180", "type": "image/png"}]
+        if icon_data_url else []
+    )
     manifest = json.dumps({
         "name": guide.name,
         "short_name": guide.name[:12],
@@ -1699,7 +1722,7 @@ def generate_guide_html(guide: Guide) -> str:
         "theme_color": "#4338CA",
         "background_color": "#FFFBF5",
         "start_url": ".",
-        "icons": []
+        "icons": manifest_icons
     })
     manifest_b64 = base64.b64encode(manifest.encode()).decode()
     manifest_url = f"data:application/json;base64,{manifest_b64}"
@@ -1744,6 +1767,7 @@ def generate_guide_html(guide: Guide) -> str:
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#4338CA">
 <title>{_esc(guide.name)}</title>
+{f'<link rel="apple-touch-icon" href="{icon_data_url}">' if icon_data_url else ''}
 <link rel="manifest" href="{manifest_url}">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
