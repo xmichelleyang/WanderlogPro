@@ -3,7 +3,7 @@
 ## Workflow
 - After any UI changes to the offline mode, regenerate the preview HTML by running:
   ```
-  python -m wanderlogpro.cli offline-mode https://wanderlog.com/plan/gpaxvjfljkfalyeh/trip-to-vietnam-guangdong-and-more/shared
+  python -m wanderlogpro.cli generate-offline-page https://wanderlog.com/plan/gpaxvjfljkfalyeh/trip-to-vietnam-guangdong-and-more/shared
   ```
 - Do not create git commits on the user's behalf.
 - Run `python -m pytest tests/ --tb=short -q` after code changes to verify nothing breaks.

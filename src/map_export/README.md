@@ -8,21 +8,20 @@ Export your [Wanderlog](https://wanderlog.com) trips to **Google My Maps** as st
 
 ```bash
 # Export a public trip — outputs <trip-name>.kml in the current directory
-wanderlogpro export https://wanderlog.com/view/abcd1234/my-trip
+wanderlogpro export-map https://wanderlog.com/view/abcd1234/my-trip
 ```
 
 Open the `.kml` file in Google My Maps.
-
 ---
 
 ## CLI Reference
 
-### `wanderlogpro export`
+### `wanderlogpro export-map`
 
 Export a Wanderlog trip to a styled KML file.
 
 ```
-wanderlogpro export <TRIP_URL> [OPTIONS]
+wanderlogpro export-map <TRIP_URL> [OPTIONS]
 ```
 
 | Argument / Option | Description |
@@ -35,13 +34,13 @@ wanderlogpro export <TRIP_URL> [OPTIONS]
 
 ```bash
 # Export a public trip (auto-named output file)
-wanderlogpro export https://wanderlog.com/view/abcd1234/my-trip
+wanderlogpro export-map https://wanderlog.com/view/abcd1234/my-trip
 
 # Specify output file name
-wanderlogpro export https://wanderlog.com/view/abcd1234/my-trip -o paris-2026.kml
+wanderlogpro export-map https://wanderlog.com/view/abcd1234/my-trip -o paris-2026.kml
 
 # Export a private trip with session cookie
-wanderlogpro export https://wanderlog.com/view/abcd1234/my-trip -c "session=eyJhbGci..."
+wanderlogpro export-map https://wanderlog.com/view/abcd1234/my-trip -c "session=eyJhbGci..."
 ```
 
 ### Sample Output
@@ -59,6 +58,8 @@ Import into Google My Maps at https://mymaps.google.com
    📂 Hotels [hotel] — 3 places
    📂 Coffee Shops [cafe] — 5 places
 ```
+
+> **Hotels layer:** Every hotel reservation in your trip (blocks with check-in/check-out dates) is automatically collected into a dedicated **Hotels** layer with a hotel-bed icon — regardless of which section you put them in. If you already have a list literally named "Hotels", the synthesized layer is renamed "Hotels (reservations)" to avoid confusion.
 
 ---
 
@@ -101,7 +102,7 @@ Private trips require your Wanderlog session cookie for authentication:
 Then pass it to the CLI:
 
 ```bash
-wanderlogpro export https://wanderlog.com/view/abcd1234/my-trip \
+wanderlogpro export-map https://wanderlog.com/view/abcd1234/my-trip \
   --cookie "session=eyJhbGci...; other_cookie=value"
 ```
 

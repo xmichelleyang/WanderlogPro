@@ -7,7 +7,7 @@ Export your [Wanderlog](https://wanderlog.com) trip itinerary to **Google Calend
 ## Quick Start
 
 ```bash
-python -m wanderlogpro.cli calendar https://wanderlog.com/view/abcd1234/my-trip
+python -m wanderlogpro.cli export-calendar https://wanderlog.com/view/abcd1234/my-trip
 # → Browser opens for Google sign-in (first time only)
 # → Events are created in a new sub-calendar
 ```
@@ -18,12 +18,12 @@ This creates a new sub-calendar (e.g., "Paris 2026 — WanderlogPro") with each 
 
 ## CLI Reference
 
-### `calendar`
+### `export-calendar`
 
 Export a Wanderlog trip's day-by-day itinerary to Google Calendar.
 
 ```
-python -m wanderlogpro.cli calendar <TRIP_URL> [OPTIONS]
+python -m wanderlogpro.cli export-calendar <TRIP_URL> [OPTIONS]
 ```
 
 | Argument / Option | Description |
@@ -37,16 +37,16 @@ python -m wanderlogpro.cli calendar <TRIP_URL> [OPTIONS]
 
 ```bash
 # Export itinerary to Google Calendar
-python -m wanderlogpro.cli calendar https://wanderlog.com/view/abcd1234/my-trip
+python -m wanderlogpro.cli export-calendar https://wanderlog.com/view/abcd1234/my-trip
 
 # Preview what events would be created (opens an HTML week-view in your browser)
-python -m wanderlogpro.cli calendar https://wanderlog.com/view/abcd1234/my-trip --dry-run
+python -m wanderlogpro.cli export-calendar https://wanderlog.com/view/abcd1234/my-trip --dry-run
 
 # Start each day at 9 AM instead of the default 10 AM
-python -m wanderlogpro.cli calendar https://wanderlog.com/view/abcd1234/my-trip --start-hour 9
+python -m wanderlogpro.cli export-calendar https://wanderlog.com/view/abcd1234/my-trip --start-hour 9
 
 # Private trip with session cookie
-python -m wanderlogpro.cli calendar https://wanderlog.com/view/abcd1234/my-trip -c "session=eyJhbGci..."
+python -m wanderlogpro.cli export-calendar https://wanderlog.com/view/abcd1234/my-trip -c "session=eyJhbGci..."
 ```
 
 ### Sample Output
@@ -72,7 +72,7 @@ python -m wanderlogpro.cli calendar https://wanderlog.com/view/abcd1234/my-trip 
 Use `--dry-run` to preview your itinerary as an interactive HTML week-view calendar **without signing in to Google**:
 
 ```bash
-python -m wanderlogpro.cli calendar https://wanderlog.com/view/abcd1234/my-trip --dry-run
+python -m wanderlogpro.cli export-calendar https://wanderlog.com/view/abcd1234/my-trip --dry-run
 ```
 
 This opens a browser tab with a Google Calendar-style week view showing:
@@ -158,7 +158,7 @@ export WANDERLOGPRO_CLIENT_SECRET='GOCSPX-your-secret'
 On first run, a browser window opens for Google sign-in:
 
 ```bash
-python -m wanderlogpro.cli calendar https://wanderlog.com/view/abcd1234/my-trip
+python -m wanderlogpro.cli export-calendar https://wanderlog.com/view/abcd1234/my-trip
 # → Browser opens for Google OAuth consent
 # → After approval, a token is cached at ~/.wanderlogpro/token.json
 ```

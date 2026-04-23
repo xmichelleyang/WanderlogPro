@@ -251,3 +251,147 @@ class TestParseTripResponse:
         data = {"title": "Empty", "itinerary": {"sections": []}}
         trip = _parse_trip_response("t1", data)
         assert trip.place_lists == []
+
+
+def _hotel_block(name, lat, lng, check_in="2026-04-20", check_out="2026-04-22"):
+    """Build a block dict representing a hotel reservation."""
+    return {
+        "type": "place",
+        "hotel": {
+            "checkIn": check_in,
+            "checkOut": check_out,
+            "confirmationNumber": "ABC123",
+        },
+        "place": {
+            "name": name,
+            "geometry": {"location": {"lat": lat, "lng": lng}},
+            "address_components": [{"long_name": "123 Main St"}],
+        },
+    }
+
+
+class TestHotelsLayer:
+    def test_hotels_only_in_day_plan_section(self):
+        """Hotel reservations in a dayPlan section get their own Hotels layer."""
+        data = {
+            "title": "Trip",
+            "itinerary": {
+                "sections": [
+                    {
+                        "heading": "Day 1",
+                        "mode": "dayPlan",
+                        "blocks": [
+                            _hotel_block("Hilton Hanoi", 21.03, 105.85),
+                        ],
+                    },
+                ]
+            },
+        }
+        trip = _parse_trip_response("t1", data)
+        hotels = [pl for pl in trip.place_lists if pl.name == "Hotels"]
+        assert len(hotels) == 1
+        assert hotels[0].icon == "hotel"
+        assert hotels[0].color == "#4338CA"
+        assert len(hotels[0].places) == 1
+        assert hotels[0].places[0].name == "Hilton Hanoi"
+
+    def test_hotels_duplicate_when_in_user_list(self):
+        """Hotels appearing in a user-named list are also in the synthesized Hotels layer."""
+        data = {
+            "title": "Trip",
+            "itinerary": {
+                "sections": [
+                    {
+                        "heading": "Lodging",
+                        "placeMarkerIcon": "bed",
+                        "placeMarkerColor": "#000000",
+                        "blocks": [
+                            _hotel_block("Hilton Hanoi", 21.03, 105.85),
+                        ],
+                    },
+                ]
+            },
+        }
+        trip = _parse_trip_response("t1", data)
+        names = [pl.name for pl in trip.place_lists]
+        assert "Lodging" in names
+        assert "Hotels" in names
+        lodging = next(pl for pl in trip.place_lists if pl.name == "Lodging")
+        hotels = next(pl for pl in trip.place_lists if pl.name == "Hotels")
+        assert len(lodging.places) == 1
+        assert len(hotels.places) == 1
+
+    def test_hotels_name_conflict_uses_suffix(self):
+        """If user list is literally named 'Hotels', synthesized layer uses suffix."""
+        data = {
+            "title": "Trip",
+            "itinerary": {
+                "sections": [
+                    {
+                        "heading": "Hotels",
+                        "placeMarkerIcon": "bed",
+                        "blocks": [
+                            _hotel_block("Hilton Hanoi", 21.03, 105.85),
+                        ],
+                    },
+                ]
+            },
+        }
+        trip = _parse_trip_response("t1", data)
+        names = [pl.name for pl in trip.place_lists]
+        assert "Hotels" in names  # user's list
+        assert "Hotels (reservations)" in names  # synthesized
+        synth = next(pl for pl in trip.place_lists if pl.name == "Hotels (reservations)")
+        assert synth.icon == "hotel"
+        assert len(synth.places) == 1
+
+    def test_no_hotels_no_synthesized_layer(self):
+        data = {
+            "title": "Trip",
+            "itinerary": {
+                "sections": [
+                    {
+                        "heading": "Sightseeing",
+                        "placeMarkerIcon": "camera",
+                        "blocks": [
+                            {
+                                "type": "place",
+                                "place": {
+                                    "name": "Louvre",
+                                    "geometry": {"location": {"lat": 48.86, "lng": 2.33}},
+                                },
+                            }
+                        ],
+                    }
+                ]
+            },
+        }
+        trip = _parse_trip_response("t1", data)
+        names = [pl.name for pl in trip.place_lists]
+        assert "Hotels" not in names
+        assert "Hotels (reservations)" not in names
+
+    def test_hotel_without_coordinates_skipped(self):
+        data = {
+            "title": "Trip",
+            "itinerary": {
+                "sections": [
+                    {
+                        "heading": "Day 1",
+                        "mode": "dayPlan",
+                        "blocks": [
+                            {
+                                "type": "place",
+                                "hotel": {"checkIn": "2026-04-20"},
+                                "place": {
+                                    "name": "Unknown Hotel",
+                                    "geometry": {"location": {"lat": 0.0, "lng": 0.0}},
+                                },
+                            }
+                        ],
+                    }
+                ]
+            },
+        }
+        trip = _parse_trip_response("t1", data)
+        assert all(pl.name != "Hotels" for pl in trip.place_lists)

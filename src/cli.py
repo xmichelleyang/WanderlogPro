@@ -51,7 +51,7 @@ def main() -> None:
     """WanderlogPro — Export Wanderlog trips to Google My Maps & Google Calendar."""
 
 
-@main.command()
+@main.command(name="export-map")
 @click.argument("trip_url")
 @click.option(
     "--output", "-o",
@@ -101,7 +101,7 @@ def export(trip_url: str, output: str | None, cookie: str | None) -> None:
             click.echo(f"   📂 {pl.name}{icon_label} — {len(pl.places)} places")
 
 
-@main.command()
+@main.command(name="export-calendar")
 @click.argument("trip_url")
 @click.option(
     "--cookie", "-c",
@@ -285,7 +285,7 @@ def export_all(
     click.echo("   🔗 View at https://calendar.google.com")
 
 
-@main.command(name="offline-mode")
+@main.command(name="generate-offline-page")
 @click.argument("trip_url")
 @click.option(
     "--output", "-o",

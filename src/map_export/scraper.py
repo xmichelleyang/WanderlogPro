@@ -148,4 +148,66 @@ def _parse_trip_response(trip_id: str, data: dict) -> Trip:
                 places=places,
             ))
 
+    # Synthesize a dedicated "Hotels" layer from structured hotel reservations
+    # (block.hotel) so they appear on the map with a hotel icon regardless of
+    # which section Wanderlog stored them in. Duplicates with user-created
+    # lists are intentionally allowed for predictability.
+    hotel_places = _extract_hotel_places(sections)
+    if hotel_places:
+        existing_names = {pl.name for pl in place_lists}
+        hotels_name = "Hotels (reservations)" if "Hotels" in existing_names else "Hotels"
+        place_lists.append(PlaceList(
+            name=hotels_name,
+            icon="hotel",
+            color="#4338CA",
+            places=hotel_places,
+        ))
+
     return Trip(id=trip_id, name=trip_name, place_lists=place_lists)
+
+
+def _extract_hotel_places(sections: list[dict]) -> list[Place]:
+    """Extract hotel reservations as Place objects.
+
+    Walks every block across every section; emits a Place for each block
+    that has a ``hotel`` key (Wanderlog's structured reservation data,
+    with check-in, confirmation number, etc.). Skips blocks missing
+    valid coordinates.
+    """
+    hotel_places: list[Place] = []
+    for section in sections:
+        for block in section.get("blocks", []):
+            if not block.get("hotel"):
+                continue
+
+            place_data = block.get("place", {})
+            location = place_data.get("geometry", {}).get("location", {})
+            lat = location.get("lat", 0.0)
+            lng = location.get("lng", 0.0)
+            if lat == 0.0 and lng == 0.0:
+                continue
+
+            address_parts = place_data.get("address_components", [])
+            address = ", ".join(
+                c.get("long_name", "") for c in address_parts
+            ) if address_parts else place_data.get("formatted_address", "")
+
+            text_data = block.get("text", {})
+            notes = ""
+            if isinstance(text_data, dict):
+                ops = text_data.get("ops", [])
+                notes = "".join(
+                    op.get("insert", "") for op in ops if isinstance(op, dict)
+                ).strip()
+
+            hotel_places.append(Place(
+                name=place_data.get("name", "Hotel"),
+                lat=lat,
+                lng=lng,
+                address=address,
+                notes=notes,
+                list_name="Hotels",
+                icon="hotel",
+                color="#4338CA",
+            ))
+    return hotel_places
