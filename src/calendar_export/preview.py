@@ -163,10 +163,24 @@ def _fmt_time(dt: datetime) -> str:
     return dt.strftime("%I:%M %p").lstrip("0")
 
 
+def _format_duration(minutes: int) -> str:
+    """Format minutes as e.g. '1hr 30min', '45min', '2hr'."""
+    if minutes <= 0:
+        return ""
+    h = minutes // 60
+    m = minutes % 60
+    if h and m:
+        return f"{h}hr {m}min"
+    if h:
+        return f"{h}hr"
+    return f"{m}min"
+
+
 def generate_preview_html(
     trip_name: str,
     day_events: list[tuple[str, list[dict]]],
     timezone: str = "",
+    invitees: list[str] | None = None,
 ) -> str:
     """Generate a self-contained HTML string with a week-view calendar.
 
@@ -174,6 +188,8 @@ def generate_preview_html(
         trip_name: Name of the trip.
         day_events: List of (date_string, events) from preview_trip_events().
         timezone: IANA destination timezone for the info banner.
+        invitees: Optional list of emails that will be invited to share
+            the calendar when the real export runs.
 
     Returns:
         Complete HTML document as a string.
@@ -232,6 +248,20 @@ def generate_preview_html(
         ref_date = day_events[0][0]  # first trip date
         tz_html = _timezone_note(timezone, ref_date)
 
+    # Invitees block — shown in hero card when `--invite` / `--invite-file` are used
+    invitees_html = ""
+    if invitees:
+        chips = "".join(
+            f'<span class="invitee-chip">{html.escape(email)}</span>'
+            for email in invitees
+        )
+        invitees_html = (
+            f'<div class="invitees">'
+            f'<span class="invitees-label">👥 Will share with {len(invitees)} '
+            f'{"person" if len(invitees) == 1 else "people"}:</span> {chips}'
+            f'</div>'
+        )
+
     # First and last trip dates for current-time indicator
     first_date = day_events[0][0]
     last_date = day_events[-1][0]
@@ -262,6 +292,7 @@ def generate_preview_html(
       <h1>{html.escape(trip_name)}</h1>
       <p class="subtitle">Dry-run preview &middot; {total_events} events across {total_days} days</p>
       {f'<p class="tz-line">{tz_html}</p>' if tz_html else ''}
+      {invitees_html}
       <p class="hint">Run without <code>--dry-run</code> to create these events in Google Calendar.</p>
     </div>
   </div>
@@ -373,7 +404,7 @@ def _render_week(
             tooltip_data = {
                 "name": display_name,
                 "time": time_str,
-                "duration": f"{duration_min} min",
+                "duration": _format_duration(duration_min),
                 "location": location,
                 "explicit": is_explicit,
                 "description": tooltip_desc,
@@ -392,11 +423,16 @@ def _render_week(
                     travel_top = top_pct + height_pct
                     travel_height = (gap_minutes / 60 / total_hours) * 100
                     emoji = _travel_emoji(evt.get("_travel_mode", ""))
+                    travel_min = evt.get("_travel_minutes", 0) or 0
+                    if travel_min > 0:
+                        label_text = _format_duration(travel_min)
+                    else:
+                        label_text = _format_duration(gap_minutes)
                     travel_html = (
                         f'<div class="travel-gap" '
                         f'style="top:{travel_top}%;height:{travel_height}%">'
                         f'<span class="travel-dots"></span>'
-                        f'<span class="travel-label">{emoji} {gap_minutes} min</span>'
+                        f'<span class="travel-label">{emoji} {label_text}</span>'
                         f"</div>"
                     )
 
@@ -687,6 +723,31 @@ body.dark .stat-value {{ color: var(--primary-light); }}
   justify-content: flex-start;
   gap: 10px;
   flex-wrap: wrap;
+}}
+.invitees {{
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  margin-top: 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}}
+.invitees-label {{
+  font-weight: 500;
+  color: var(--text);
+}}
+.invitee-chip {{
+  display: inline-flex;
+  align-items: center;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 3px 12px;
+  font-weight: 500;
+  font-size: 0.78rem;
+  color: var(--text);
+  letter-spacing: 0.01em;
 }}
 .tz-badge {{
   display: inline-flex;
@@ -1254,6 +1315,7 @@ def open_preview(
     trip_name: str,
     day_events: list[tuple[str, list[dict]]],
     timezone: str = "",
+    invitees: list[str] | None = None,
 ) -> Path:
     """Generate HTML preview and open it in the default browser.
 
@@ -1261,11 +1323,12 @@ def open_preview(
         trip_name: Name of the trip.
         day_events: List of (date_string, events) from preview_trip_events().
         timezone: IANA destination timezone for the info banner.
+        invitees: Optional list of emails that will be shared with.
 
     Returns:
         Path to the generated HTML file.
     """
-    html_content = generate_preview_html(trip_name, day_events, timezone)
+    html_content = generate_preview_html(trip_name, day_events, timezone, invitees)
     tmp = tempfile.NamedTemporaryFile(
         suffix=".html", prefix="wanderlogpro-preview-", delete=False, mode="w",
         encoding="utf-8",

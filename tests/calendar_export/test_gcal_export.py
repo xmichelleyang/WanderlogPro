@@ -11,6 +11,8 @@ from wanderlogpro.calendar_export.gcal_export import (
     create_trip_calendar,
     schedule_day,
     _parse_item_time,
+    parse_invitees,
+    share_calendar,
 )
 
 
@@ -259,3 +261,93 @@ class TestCreateTripCalendar:
         body = call_args[1]["body"] if "body" in call_args[1] else call_args[0][0]
         assert "Paris 2026" in body["summary"]
         assert "WanderlogPro" in body["summary"]
+
+
+
+
+class TestParseInvitees:
+    def test_empty_returns_empty_list(self):
+        assert parse_invitees(None, None) == []
+        assert parse_invitees("", None) == []
+
+    def test_single_email_string(self):
+        assert parse_invitees("foo@example.com", None) == ["foo@example.com"]
+
+    def test_comma_separated_string(self):
+        assert parse_invitees("a@x.com, b@y.com ,c@z.com", None) == [
+            "a@x.com", "b@y.com", "c@z.com"
+        ]
+
+    def test_file_one_per_line(self, tmp_path):
+        f = tmp_path / "invites.txt"
+        f.write_text("foo@x.com\nbar@y.com\n")
+        assert parse_invitees(None, f) == ["foo@x.com", "bar@y.com"]
+
+    def test_file_skips_blanks_and_comments(self, tmp_path):
+        f = tmp_path / "invites.txt"
+        f.write_text("# team trip\nfoo@x.com\n\n# another\nbar@y.com\n")
+        assert parse_invitees(None, f) == ["foo@x.com", "bar@y.com"]
+
+    def test_merges_string_and_file_with_dedup(self, tmp_path):
+        f = tmp_path / "invites.txt"
+        f.write_text("bar@y.com\nFOO@x.com\n")
+        result = parse_invitees("foo@x.com, baz@z.com", f)
+        assert result == ["foo@x.com", "baz@z.com", "bar@y.com"]
+
+    def test_invalid_email_raises(self):
+        with pytest.raises(ValueError, match="Invalid email"):
+            parse_invitees("notanemail", None)
+
+    def test_missing_file_raises(self, tmp_path):
+        with pytest.raises(ValueError, match="not found"):
+            parse_invitees(None, tmp_path / "nope.txt")
+
+
+class TestShareCalendar:
+    def test_inserts_acl_rule_per_email(self):
+        service = MagicMock()
+        service.acl().insert().execute.return_value = {}
+        service.acl.reset_mock()
+
+        succeeded, failures = share_calendar(
+            service, "cal_abc", ["a@x.com", "b@y.com"], role="writer"
+        )
+
+        assert succeeded == ["a@x.com", "b@y.com"]
+        assert failures == []
+        assert service.acl().insert.call_count == 2
+        call = service.acl().insert.call_args_list[0]
+        assert call.kwargs["calendarId"] == "cal_abc"
+        body = call.kwargs["body"]
+        assert body == {
+            "scope": {"type": "user", "value": "a@x.com"},
+            "role": "writer",
+        }
+
+    def test_continues_on_per_email_failure(self):
+        service = MagicMock()
+
+        def insert_side_effect(**kwargs):
+            mock_req = MagicMock()
+            if kwargs["body"]["scope"]["value"] == "bad@x.com":
+                mock_req.execute.side_effect = Exception("403 forbidden")
+            else:
+                mock_req.execute.return_value = {}
+            return mock_req
+
+        service.acl().insert.side_effect = insert_side_effect
+
+        succeeded, failures = share_calendar(
+            service, "cal_abc", ["ok@x.com", "bad@x.com", "also@x.com"]
+        )
+
+        assert succeeded == ["ok@x.com", "also@x.com"]
+        assert len(failures) == 1
+        assert failures[0][0] == "bad@x.com"
+        assert "403" in failures[0][1]
+
+    def test_empty_emails_noop(self):
+        service = MagicMock()
+        succeeded, failures = share_calendar(service, "cal_abc", [])
+        assert succeeded == []
+        assert failures == []

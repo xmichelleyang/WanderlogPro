@@ -1118,16 +1118,16 @@ def _esc(text: str) -> str:
 
 
 def _format_duration(minutes: int) -> str:
-    """Format minutes as e.g. '2h 30m'."""
+    """Format minutes as e.g. '1hr 30min', '45min', '2hr'."""
     if minutes <= 0:
         return ""
     h = minutes // 60
     m = minutes % 60
     if h and m:
-        return f"{h}h {m}m"
+        return f"{h}hr {m}min"
     if h:
-        return f"{h}h"
-    return f"{m}m"
+        return f"{h}hr"
+    return f"{m}min"
 
 
 def _format_time_ampm(time_str: str) -> str:
@@ -1347,12 +1347,7 @@ def _render_connector(place: GuidePlace) -> str:
 
     chip_inner = ""
     if travel_min > 0:
-        if travel_min >= 60:
-            h = travel_min // 60
-            m = travel_min % 60
-            t = f"{h}h {m}m" if m else f"{h}h"
-        else:
-            t = f"{travel_min} min"
+        t = _format_duration(travel_min)
         mode_label = mode.lower() if mode else ""
         chip_inner = f'<span class="conn-icon">{mode_emoji}</span> {t}'
         if mode_label:

@@ -121,14 +121,43 @@ def export(trip_url: str, output: str | None, cookie: str | None) -> None:
     show_default=True,
     help="Hour (0–23) at which auto-scheduled events start each day.",
 )
-def calendar(trip_url: str, cookie: str | None, dry_run: bool, start_hour: int) -> None:
+@click.option(
+    "--invite", "-i",
+    "invite",
+    default=None,
+    help="Comma-separated emails to share the trip calendar with.",
+)
+@click.option(
+    "--invite-file", "-f",
+    "invite_file",
+    type=click.Path(exists=True, dir_okay=False, readable=True),
+    default=None,
+    help="Path to a .txt file with one email per line (# comments allowed).",
+)
+def calendar(
+    trip_url: str,
+    cookie: str | None,
+    dry_run: bool,
+    start_hour: int,
+    invite: str | None,
+    invite_file: str | None,
+) -> None:
     """Export a Wanderlog trip itinerary to Google Calendar.
 
     Creates a dedicated sub-calendar with each itinerary item as an event.
     Timed events (with specific entry times) are prefixed with [!] in the title.
     """
     from wanderlogpro.calendar_export.scraper import fetch_itinerary
-    from wanderlogpro.calendar_export.gcal_export import export_trip_to_gcal, preview_trip_events
+    from wanderlogpro.calendar_export.gcal_export import (
+        export_trip_to_gcal,
+        parse_invitees,
+        preview_trip_events,
+    )
+
+    try:
+        invitees = parse_invitees(invite, invite_file)
+    except ValueError as e:
+        raise click.ClickException(str(e))
 
     trip_url = _resolve_trip_url(trip_url)
     click.echo("🗺️  Fetching itinerary from Wanderlog...")
@@ -159,7 +188,7 @@ def calendar(trip_url: str, cookie: str | None, dry_run: bool, start_hour: int) 
 
         click.echo("🔍 Generating dry-run preview...")
         day_events = preview_trip_events(trip, start_hour=start_hour)
-        path = open_preview(trip.name, day_events, trip.timezone)
+        path = open_preview(trip.name, day_events, trip.timezone, invitees)
         total_events = sum(len(evts) for _, evts in day_events)
         click.echo(f"📄 Preview opened in browser ({total_events} events)")
         click.echo(f"   File: {path}")
@@ -168,13 +197,20 @@ def calendar(trip_url: str, cookie: str | None, dry_run: bool, start_hour: int) 
     click.echo("📅 Signing in to Google Calendar...")
 
     try:
-        calendar_id, event_count = export_trip_to_gcal(trip, start_hour=start_hour)
+        calendar_id, event_count, invited, invite_failures = export_trip_to_gcal(
+            trip, start_hour=start_hour, invitees=invitees,
+        )
     except Exception as e:
         raise click.ClickException(f"Failed to export to Google Calendar: {e}")
 
     click.echo(f"🎉 Exported {event_count} events to Google Calendar!")
     click.echo(f"\n   📅 Calendar: {trip.name} — WanderlogPro")
     click.echo("   🔗 View at https://calendar.google.com")
+
+    if invited:
+        click.echo(f"   👥 Shared calendar with {len(invited)} people: {', '.join(invited)}")
+    for email, err in invite_failures:
+        click.echo(f"   ⚠️  Failed to invite {email}: {err}")
 
     for day in trip.days:
         timed = sum(1 for item in day.items if item.start_time)
@@ -209,16 +245,40 @@ def calendar(trip_url: str, cookie: str | None, dry_run: bool, start_hour: int) 
     show_default=True,
     help="Hour (0–23) at which auto-scheduled events start each day.",
 )
+@click.option(
+    "--invite", "-i",
+    "invite",
+    default=None,
+    help="Comma-separated emails to share the trip calendar with.",
+)
+@click.option(
+    "--invite-file", "-f",
+    "invite_file",
+    type=click.Path(exists=True, dir_okay=False, readable=True),
+    default=None,
+    help="Path to a .txt file with one email per line (# comments allowed).",
+)
 def export_all(
     trip_url: str,
     output: str | None,
     cookie: str | None,
     dry_run: bool,
     start_hour: int,
+    invite: str | None,
+    invite_file: str | None,
 ) -> None:
     """Export a Wanderlog trip to both KML and Google Calendar."""
     from wanderlogpro.calendar_export.scraper import fetch_itinerary
-    from wanderlogpro.calendar_export.gcal_export import export_trip_to_gcal, preview_trip_events
+    from wanderlogpro.calendar_export.gcal_export import (
+        export_trip_to_gcal,
+        parse_invitees,
+        preview_trip_events,
+    )
+
+    try:
+        invitees = parse_invitees(invite, invite_file)
+    except ValueError as e:
+        raise click.ClickException(str(e))
 
     trip_url = _resolve_trip_url(trip_url)
 
@@ -267,7 +327,7 @@ def export_all(
 
         click.echo("🔍 Generating dry-run preview...")
         day_events = preview_trip_events(cal_trip, start_hour=start_hour)
-        path = open_preview(cal_trip.name, day_events, cal_trip.timezone)
+        path = open_preview(cal_trip.name, day_events, cal_trip.timezone, invitees)
         total_events = sum(len(evts) for _, evts in day_events)
         click.echo(f"📄 Preview opened in browser ({total_events} events)")
         click.echo(f"   File: {path}")
@@ -276,13 +336,20 @@ def export_all(
     click.echo("📅 Signing in to Google Calendar...")
 
     try:
-        calendar_id, event_count = export_trip_to_gcal(cal_trip, start_hour=start_hour)
+        calendar_id, event_count, invited, invite_failures = export_trip_to_gcal(
+            cal_trip, start_hour=start_hour, invitees=invitees,
+        )
     except Exception as e:
         raise click.ClickException(f"Failed to export to Google Calendar: {e}")
 
     click.echo(f"🎉 Exported {event_count} events to Google Calendar!")
     click.echo(f"\n   📅 Calendar: {cal_trip.name} — WanderlogPro")
     click.echo("   🔗 View at https://calendar.google.com")
+
+    if invited:
+        click.echo(f"   👥 Shared calendar with {len(invited)} people: {', '.join(invited)}")
+    for email, err in invite_failures:
+        click.echo(f"   ⚠️  Failed to invite {email}: {err}")
 
 
 @main.command(name="generate-offline-page")

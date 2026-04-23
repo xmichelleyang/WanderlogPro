@@ -32,6 +32,8 @@ python -m wanderlogpro.cli export-calendar <TRIP_URL> [OPTIONS]
 | `--cookie`, `-c` | Session cookie for private trips |
 | `--dry-run` | Preview events in a week-view HTML page in your browser — no Google sign-in needed |
 | `--start-hour`, `-s` | Hour (0–23) at which auto-scheduled events start each day (default: 10) |
+| `--invite`, `-i` | Comma-separated emails to share the trip calendar with (writer access) |
+| `--invite-file`, `-f` | Path to a `.txt` file with one email per line (`#` comments and blank lines ignored) |
 
 ### Examples
 
@@ -47,7 +49,17 @@ python -m wanderlogpro.cli export-calendar https://wanderlog.com/view/abcd1234/m
 
 # Private trip with session cookie
 python -m wanderlogpro.cli export-calendar https://wanderlog.com/view/abcd1234/my-trip -c "session=eyJhbGci..."
+
+# Invite travel companions — they get an email from Google to add the calendar
+python -m wanderlogpro.cli export-calendar <TRIP_URL> --invite "alice@example.com,bob@example.com"
+
+# Invitees from a file (one email per line, # for comments)
+python -m wanderlogpro.cli export-calendar <TRIP_URL> --invite-file invitees.txt
 ```
+
+Invitees receive a standard Google Calendar sharing email and gain **writer** access
+(they can see and edit events). `--invite` and `--invite-file` can be combined; emails
+are deduplicated automatically.
 
 ### Sample Output
 

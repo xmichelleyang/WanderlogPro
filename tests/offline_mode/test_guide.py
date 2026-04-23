@@ -1048,7 +1048,7 @@ class TestV6PlaceCardHtml:
     def test_duration_in_tag_pills(self):
         html = self._html(duration_minutes=90)
         assert "place-tag" in html
-        assert "1h 30m" in html
+        assert "1hr 30min" in html
 
     def test_connector_between_cards(self):
         guide = Guide(name="Trip", days=[GuideDay(
@@ -1060,7 +1060,7 @@ class TestV6PlaceCardHtml:
         )])
         html = generate_guide_html(guide)
         assert "connector" in html
-        assert "10 min" in html
+        assert "10min" in html
 
     def test_no_connector_after_last_card(self):
         guide = Guide(name="Trip", days=[GuideDay(
@@ -1093,7 +1093,7 @@ class TestV6PlaceCardHtml:
             ],
         )])
         html = generate_guide_html(guide)
-        assert "1h 30m" in html
+        assert "1hr 30min" in html
 
     def test_v6_css_variables(self):
         html = self._html(category="snack")
@@ -1317,3 +1317,13 @@ class TestDayCarousel:
     def test_footer_has_extra_padding(self):
         html = generate_guide_html(self._guide())
         assert 'padding: 2rem 1rem 5rem' in html
+
+class TestFormatDuration:
+    def test_values(self):
+        from wanderlogpro.offline_mode.generator import _format_duration
+        assert _format_duration(0) == ""
+        assert _format_duration(-5) == ""
+        assert _format_duration(45) == "45min"
+        assert _format_duration(60) == "1hr"
+        assert _format_duration(90) == "1hr 30min"
+        assert _format_duration(575) == "9hr 35min"

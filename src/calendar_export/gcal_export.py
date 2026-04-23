@@ -187,6 +187,8 @@ def build_event(
         event["location"] = item.address
     if item.travel_mode:
         event["_travel_mode"] = item.travel_mode
+    if item.travel_minutes_to_next:
+        event["_travel_minutes"] = item.travel_minutes_to_next
 
     return event
 
@@ -297,22 +299,109 @@ def preview_trip_events(
     return result
 
 
+def parse_invitees(
+    emails_str: str | None = None,
+    emails_file: str | os.PathLike | None = None,
+) -> list[str]:
+    """Parse invitee emails from a comma-separated string and/or a text file.
+
+    The file format is one email per line. Blank lines and lines starting
+    with ``#`` (after stripping whitespace) are ignored. Emails from the
+    string and file are merged and deduplicated while preserving order.
+    Every result must contain ``@``; anything else raises ``ValueError``.
+    """
+    collected: list[str] = []
+
+    def _add(raw: str) -> None:
+        email = raw.strip()
+        if not email:
+            return
+        if "@" not in email:
+            raise ValueError(f"Invalid email address: {email!r}")
+        collected.append(email)
+
+    if emails_str:
+        for part in emails_str.split(","):
+            _add(part)
+
+    if emails_file:
+        path = Path(emails_file)
+        if not path.is_file():
+            raise ValueError(f"Invitee file not found: {path}")
+        for line in path.read_text(encoding="utf-8").splitlines():
+            stripped = line.strip()
+            if not stripped or stripped.startswith("#"):
+                continue
+            _add(stripped)
+
+    seen: set[str] = set()
+    deduped: list[str] = []
+    for email in collected:
+        key = email.lower()
+        if key in seen:
+            continue
+        seen.add(key)
+        deduped.append(email)
+    return deduped
+
+
+def share_calendar(
+    service,
+    calendar_id: str,
+    emails: list[str],
+    role: str = "writer",
+) -> tuple[list[str], list[tuple[str, str]]]:
+    """Share a calendar with a list of users via the ACL API.
+
+    Google sends an email invitation to each address automatically.
+
+    Args:
+        service: Authenticated Google Calendar service.
+        calendar_id: ID of the calendar to share.
+        emails: List of email addresses to invite.
+        role: ACL role — one of ``reader``, ``writer``, ``owner``,
+            or ``freeBusyReader``.
+
+    Returns:
+        Tuple of ``(succeeded, failures)`` where ``failures`` is a list of
+        ``(email, error_message)`` pairs.
+    """
+    succeeded: list[str] = []
+    failures: list[tuple[str, str]] = []
+    for email in emails:
+        body = {
+            "scope": {"type": "user", "value": email},
+            "role": role,
+        }
+        try:
+            service.acl().insert(calendarId=calendar_id, body=body).execute()
+            succeeded.append(email)
+        except Exception as e:  # googleapiclient raises HttpError et al.
+            failures.append((email, str(e)))
+    return succeeded, failures
+
+
 def export_trip_to_gcal(
     trip: CalendarTrip,
     start_hour: int = DEFAULT_START_HOUR,
-) -> tuple[str, int]:
+    invitees: list[str] | None = None,
+    invitee_role: str = "writer",
+) -> tuple[str, int, list[str], list[tuple[str, str]]]:
     """Export a trip's itinerary to Google Calendar.
 
     Creates a new sub-calendar for the trip and adds all itinerary
-    items as events with proper scheduling.
+    items as events with proper scheduling. Optionally shares the new
+    calendar with a list of invitees.
 
     Args:
         trip: A CalendarTrip with itinerary days.
         start_hour: Hour of the day (0–23) at which auto-scheduled events
             begin. Defaults to 10 (10 AM).
+        invitees: Optional list of emails to share the calendar with.
+        invitee_role: ACL role to grant invitees. Defaults to ``writer``.
 
     Returns:
-        Tuple of (calendar_id, event_count).
+        Tuple of ``(calendar_id, event_count, invited_emails, invite_failures)``.
     """
     creds = authenticate()
     service = get_calendar_service(creds)
@@ -329,4 +418,9 @@ def export_trip_to_gcal(
             ).execute()
             event_count += 1
 
-    return calendar_id, event_count
+    invited: list[str] = []
+    failures: list[tuple[str, str]] = []
+    if invitees:
+        invited, failures = share_calendar(service, calendar_id, invitees, role=invitee_role)
+
+    return calendar_id, event_count, invited, failures

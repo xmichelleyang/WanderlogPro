@@ -312,7 +312,7 @@ class TestGeneratePreviewHtml:
         ]
         html = generate_preview_html("Trip", day_events)
         assert "travel-gap" in html
-        assert "20 min" in html
+        assert "20min" in html
 
     def test_event_count_summary(self):
         day_events = [
@@ -387,3 +387,124 @@ class TestTimezoneNote:
         result = generate_preview_html("Trip", day_events)
         # CSS class will exist in stylesheet but no actual banner div
         assert '<div class="tz-note">' not in result
+
+
+class TestInviteesInPreview:
+    def _one_event(self):
+        trip = CalendarTrip(
+            id="t",
+            name="Test Trip",
+            days=[
+                ItineraryDay(
+                    date="2026-04-20",
+                    items=[ItineraryItem(name="A", lat=0, lng=0, duration_minutes=60)],
+                ),
+            ],
+        )
+        return preview_trip_events(trip)
+
+    def test_no_invitees_no_block(self):
+        html = generate_preview_html("Trip", self._one_event())
+        assert 'class="invitee-chip"' not in html
+        assert "Will share with" not in html
+
+    def test_invitees_rendered_as_chips(self):
+        html = generate_preview_html(
+            "Trip", self._one_event(), invitees=["alice@x.com", "bob@y.com"]
+        )
+        assert "Will share with 2 people" in html
+        assert 'class="invitee-chip">alice@x.com' in html
+        assert 'class="invitee-chip">bob@y.com' in html
+
+    def test_single_invitee_singular(self):
+        html = generate_preview_html(
+            "Trip", self._one_event(), invitees=["alice@x.com"]
+        )
+        assert "Will share with 1 person" in html
+
+    def test_invitee_email_escaped(self):
+        html = generate_preview_html(
+            "Trip", self._one_event(), invitees=["<script>@x.com"]
+        )
+        assert "<script>@x.com" not in html
+        assert "&lt;script&gt;@x.com" in html
+
+
+class TestFormatDuration:
+    def test_zero_is_empty(self):
+        from wanderlogpro.calendar_export.preview import _format_duration
+        assert _format_duration(0) == ""
+        assert _format_duration(-5) == ""
+
+    def test_minutes_only(self):
+        from wanderlogpro.calendar_export.preview import _format_duration
+        assert _format_duration(45) == "45min"
+
+    def test_exact_hour(self):
+        from wanderlogpro.calendar_export.preview import _format_duration
+        assert _format_duration(60) == "1hr"
+        assert _format_duration(120) == "2hr"
+
+    def test_hour_plus_minutes(self):
+        from wanderlogpro.calendar_export.preview import _format_duration
+        assert _format_duration(90) == "1hr 30min"
+        assert _format_duration(575) == "9hr 35min"
+
+    def test_travel_gap_uses_hr_format_in_preview(self):
+        """Regression: travel-label in HTML should say '9hr 35min' not '575 min'."""
+        trip = CalendarTrip(
+            id="t",
+            name="T",
+            days=[
+                ItineraryDay(
+                    date="2026-04-20",
+                    items=[
+                        ItineraryItem(
+                            name="A", lat=0, lng=0,
+                            duration_minutes=60, travel_minutes_to_next=575,
+                            travel_mode="driving",
+                        ),
+                        ItineraryItem(name="B", lat=0, lng=0, duration_minutes=60),
+                    ],
+                )
+            ],
+        )
+        html = generate_preview_html("T", preview_trip_events(trip))
+        assert "9hr 35min" in html
+        assert "575 min" not in html
+
+    def test_travel_label_uses_scraper_time_not_scheduling_gap(self):
+        """Regression: when next event has explicit start_time far in the future,
+        the travel-label should show the actual Wanderlog travel time (e.g. 10min),
+        not the wall-clock scheduling gap (e.g. 3hr 56min). The gap VISUAL can
+        still fill that space, but the LABEL must reflect scraper data."""
+        trip = CalendarTrip(
+            id="t",
+            name="T",
+            days=[
+                ItineraryDay(
+                    date="2026-04-20",
+                    items=[
+                        ItineraryItem(
+                            name="Public Market", lat=0, lng=0,
+                            duration_minutes=60,
+                            travel_minutes_to_next=10,
+                            travel_mode="driving",
+                        ),
+                        # Explicit late start forces a big scheduling gap
+                        ItineraryItem(
+                            name="The Steward", lat=0, lng=0,
+                            start_time="19:00", end_time="21:00",
+                            duration_minutes=120,
+                        ),
+                    ],
+                )
+            ],
+        )
+        html = generate_preview_html("T", preview_trip_events(trip))
+        assert "travel-gap" in html
+        # Label must be the scraper travel (10min), NOT the wall-clock gap.
+        import re
+        labels = re.findall(r'travel-label">[^<]+', html)
+        assert any("10min" in lbl for lbl in labels), labels
+        assert not any("3hr" in lbl or "4hr" in lbl for lbl in labels), labels
